@@ -46,7 +46,7 @@ def harus_pengembang(fn):
         verify_jwt_in_request()
         claims = get_jwt_claims()
         if claims["peran"] is not "pengembang":
-            return {"status": "GAGAL_MASUK", "pesan": "Hanya pengembang yang diperkenankan untuk akses."}, 403
+            return {"status": "DILARANG", "pesan": "Hanya pengembang yang diperkenankan untuk akses."}, 403
         return fn(*args, **kwargs)
     return wrapper
 
@@ -56,7 +56,7 @@ def harus_admin(fn):
         verify_jwt_in_request()
         claims = get_jwt_claims()
         if claims["peran"] is not "admin":
-            return {"status": "GAGAL_MASUK", "pesan": "Hanya admin yang diperkenankan untuk akses."}, 403
+            return {"status": "DILARANG", "pesan": "Hanya admin yang diperkenankan untuk akses."}, 403
         return fn(*args, **kwargs)
     return wrapper
 
@@ -66,7 +66,7 @@ def harus_pengguna(fn):
         verify_jwt_in_request()
         claims = get_jwt_claims()
         if claims["peran"] is not "pengguna":
-            return {"status": "GAGAL_MASUK", "pesan": "Hanya pengguna yang diperkenankan untuk akses."}, 403
+            return {"status": "DILARANG", "pesan": "Hanya pengguna yang diperkenankan untuk akses."}, 403
         return fn(*args, **kwargs)
     return wrapper
 
@@ -94,14 +94,8 @@ def after_request(response):
     return response
 
 
-# from blueprints.auth import blueprint_auth
-# from blueprints.produk.resources import blueprint_product
-# from blueprints.admin.resources import blueprint_admin
-# from blueprints.user.resources import blueprint_user
+from blueprints.umum import blueprint_umum
 
-# app.register_blueprint(blueprint_auth, url_prefix="/api/auth")
-# app.register_blueprint(blueprint_product, url_prefix="/api/product")
-# app.register_blueprint(blueprint_user, url_prefix="/api/user")
-# app.register_blueprint(blueprint_admin, url_prefix="/api/admin")
+app.register_blueprint(blueprint_umum, url_prefix="")
 
 db.create_all()
