@@ -12,12 +12,12 @@ class Pengguna(db.Model):
     nama_belakang = db.Column(db.String(100), nullable=False, default="")
     kota = db.Column(db.String(20), nullable=False, default="")
     email = db.Column(db.String(100), nullable=False, default="")
-    password = db.Column(db.String(100), nullable=False, default="")
+    kata_sandi = db.Column(db.String(100), nullable=False, default="")
     telepon = db.Column(db.String(15), nullable=False, default="")
-    nomor_pln = db.Column(db.String(15), nullable=False, default="")
-    nomor_bpjs = db.Column(db.String(15), nullable=False, default="")
-    nomor_telkom = db.Column(db.String(15), nullable=False, default="")
-    nomor_pdam = db.Column(db.String(15), nullable=False, default="")
+    nomor_pln = db.Column(db.String(20), nullable=False, default="")
+    nomor_bpjs = db.Column(db.String(20), nullable=False, default="")
+    nomor_telkom = db.Column(db.String(20), nullable=False, default="")
+    nomor_pdam = db.Column(db.String(20), nullable=False, default="")
     aktif = db.Column(db.Boolean, nullable=False, default=True)
     terverifikasi = db.Column(db.Boolean, nullable=False, default=False)
     dibuat = db.Column(db.DateTime, default=datetime.now())
@@ -33,7 +33,7 @@ class Pengguna(db.Model):
         "nama_belakang": fields.String,
         "kota": fields.String,
         "email": fields.String,
-        "password": fields.String,
+        "kata_sandi": fields.String,
         "telepon": fields.String,
         "nomor_pln": fields.String,
         "nomor_bpjs": fields.String,
@@ -48,11 +48,12 @@ class Pengguna(db.Model):
         "peran": fields.String
     }
 
-    def __init__(self, nama_depan, nama_belakang, email, password):
+    def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi):
         self.nama_depan = nama_depan
         self.nama_belakang = nama_belakang
+        self.kota = kota
         self.email = email
-        self.password = password
+        self.kata_sandi = kata_sandi
 
     def __repr__(self):
         return "<Pengguna %r>" % self.id
