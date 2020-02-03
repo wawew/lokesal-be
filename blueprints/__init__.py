@@ -96,6 +96,6 @@ def after_request(response):
 
 from blueprints.umum import blueprint_umum
 
-app.register_blueprint(blueprint_umum, url_prefix="/")
+app.register_blueprint(blueprint_umum, url_prefix="")
 
 db.create_all()

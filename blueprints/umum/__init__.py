@@ -38,7 +38,7 @@ class Daftar(Resource):
                 return {"status": "GAGAL", "message": "Email sudah terdaftar."}, 400, {"Content-Type": "application/json"}
             db.session.add(pengguna)
             db.session.commit()
-            return marshal(pengguna, Pengguna.response_fields), 200, {"Content-Type": "application/json"}
+            return marshal(pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"}
         return {"status": "GAGAL", "pesan": "Kata sandi tidak sesuai standar."}, 400, {"Content-Type": "application/json"}
 
     def options(self):
