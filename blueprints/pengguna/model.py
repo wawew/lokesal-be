@@ -48,12 +48,13 @@ class Pengguna(db.Model):
         "kota": fields.String
     }
 
-    def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi):
+    def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi, telepon):
         self.nama_depan = nama_depan
         self.nama_belakang = nama_belakang
         self.kota = kota
         self.email = email
         self.kata_sandi = kata_sandi
+        self.telepon = telepon
 
     def __repr__(self):
         return "<Pengguna %r>" % self.id
@@ -72,6 +73,7 @@ class Keluhan(db.Model):
     status = db.Column(db.String(10), nullable=False, default="diterima")
     dibaca = db.Column(db.Boolean, nullable=False, default=True)
     total_dukungan = db.Column(db.Integer, nullable=False, default=0)
+    total_komentar = db.Column(db.Integer, nullable=False, default=0)
     anonim = db.Column(db.Boolean, nullable=False, default=False)
     dibuat = db.Column(db.DateTime, default=datetime.now())
     diperbarui = db.Column(db.DateTime, default=datetime.now())
@@ -89,8 +91,9 @@ class Keluhan(db.Model):
         "isi": fields.String,
         "status": fields.String,
         "dibaca": fields.Boolean,
-        "anonim": fields.Boolean
+        "anonim": fields.Boolean,
         "total_dukungan": fields.Integer,
+        "total_komentar": fields.Integer
     }
 
     def __init__(self, id_pengguna, foto_sebelum, kota, longitude, latitude, isi, anonim):
