@@ -18,7 +18,6 @@ class PenggunaKeluhan(Resource):
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument("foto_sebelum", location="json", required=True)
-        # parser.add_argument("kota", location="json", required=True)
         parser.add_argument("longitude", location="json", required=True)
         parser.add_argument("latitude", location="json", required=True)
         parser.add_argument("isi", location="json", required=True)
