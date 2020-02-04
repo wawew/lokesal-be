@@ -88,12 +88,15 @@ class UmumKeluhan(Resource):
             daftar_keluhan = []
             parser =reqparse.RequestParser()
             parser.add_argument("status", location="args")
+            parser.add_argument("kota", location="args", required=True)
             parser.add_argument("p", type=int, location="args", default=1)
             parser.add_argument("rp", type=int, location="args", default=10)
             args = parser.parse_args()
             
             filter_keluhan = Keluhan.query
             total_keluhan = len(filter_keluhan.all())
+            # filter berdasarkan kota
+            filter_keluhan = filter_keluhan.filter_by(kota=args["kota"])
             # mengurutkan berdasarkan jumlah dukungan
             # mengurutkan berdasarkan tanggal diubah
             # filter berdasarkan status keluhan
@@ -130,6 +133,26 @@ class UmumKeluhan(Resource):
         return 200
 
 
+class UmumTotalKeluhan(Resource):
+    def get(self):
+        total_keluhan = {}
+        parser =reqparse.RequestParser()
+        parser.add_argument("kota", location="args", required=True)
+        parser.add_argument("p", type=int, location="args", default=1)
+        parser.add_argument("rp", type=int, location="args", default=10)
+        args = parser.parse_args()
+
+        filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
+        total_keluhan["diterima"] = len(filter_keluhan.filter_by(status="diterima").all())
+        total_keluhan["diproses"] = len(filter_keluhan.filter_by(status="diproses").all())
+        total_keluhan["selesai"] = len(filter_keluhan.filter_by(status="selesai").all())
+        return total_keluhan, 200, {"Content-Type": "application/json"}
+
+    def options(self):
+        return 200
+
+
 api.add_resource(UmumMasuk, "/masuk")
 api.add_resource(UmumDaftar, "/daftar")
 api.add_resource(UmumKeluhan, "/keluhan", "/keluhan/<int:id>")
+api.add_resource(UmumTotalKeluhan, "/total_keluhan")
