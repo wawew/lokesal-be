@@ -33,7 +33,6 @@ class Pengguna(db.Model):
         "nama_belakang": fields.String,
         "kota": fields.String,
         "email": fields.String,
-        "kata_sandi": fields.String,
         "telepon": fields.String,
         "nomor_pln": fields.String,
         "nomor_bpjs": fields.String,
@@ -58,3 +57,48 @@ class Pengguna(db.Model):
 
     def __repr__(self):
         return "<Pengguna %r>" % self.id
+
+
+class Keluhan(db.Model):
+    __tablename__ = "keluhan"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_pengguna = db.Column(db.Integer, db.ForeignKey('pengguna.id'), nullable=False)
+    foto_sebelum = db.Column(db.String(1000), nullable=False, default="")
+    foto_sesudah = db.Column(db.String(1000), nullable=False, default="")
+    kota = db.Column(db.String(20), nullable=False, default="")
+    longitude = db.Column(db.String(100), nullable=False, default="")
+    latitude = db.Column(db.String(100), nullable=False, default="")
+    isi = db.Column(db.String(1000), nullable=False, default="")
+    status = db.Column(db.String(10), nullable=False, default="diterima")
+    dibaca = db.Column(db.Boolean, nullable=False, default=True)
+    total_dukungan = db.Column(db.Integer, nullable=False, default=0)
+    anonim = db.Column(db.Boolean, nullable=False, default=False)
+    dibuat = db.Column(db.DateTime, default=datetime.now())
+    diperbarui = db.Column(db.DateTime, default=datetime.now())
+
+    respons = {
+        "dibuat": fields.DateTime,
+        "diperbarui": fields.DateTime,
+        "id": fields.Integer,
+        "id_pengguna": fields.Integer,
+        "foto_sebelum": fields.String,
+        "foto_sesudah": fields.String,
+        "kota": fields.String,
+        "longitude": fields.String,
+        "latitude": fields.String,
+        "isi": fields.String,
+        "status": fields.String,
+        "dibaca": fields.Boolean,
+        "anonim": fields.Boolean
+        "total_dukungan": fields.Integer,
+    }
+
+    def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi):
+        self.nama_depan = nama_depan
+        self.nama_belakang = nama_belakang
+        self.kota = kota
+        self.email = email
+        self.kata_sandi = kata_sandi
+
+    def __repr__(self):
+        return "<Keluhan %r>" % self.id
