@@ -93,12 +93,14 @@ class Keluhan(db.Model):
         "total_dukungan": fields.Integer,
     }
 
-    def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi):
-        self.nama_depan = nama_depan
-        self.nama_belakang = nama_belakang
-        self.kota = kota
-        self.email = email
-        self.kata_sandi = kata_sandi
+    def __init__(self, id_pengguna, foto_sebelum, kota, longitude, latitude, isi, anonim):
+        self.id_pengguna = id_pengguna,
+        self.foto_sebelum = foto_sebelum,
+        self.kota = kota,
+        self.longitude = longitude,
+        self.latitude = latitude,
+        self.isi = isi,
+        self.anonim = anonim
 
     def __repr__(self):
         return "<Keluhan %r>" % self.id
