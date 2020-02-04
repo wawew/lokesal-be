@@ -20,8 +20,8 @@ class Pengguna(db.Model):
     nomor_pdam = db.Column(db.String(20), nullable=False, default="")
     aktif = db.Column(db.Boolean, nullable=False, default=True)
     terverifikasi = db.Column(db.Boolean, nullable=False, default=False)
-    dibuat = db.Column(db.DateTime, default=datetime.now())
-    diperbarui = db.Column(db.DateTime, default=datetime.now())
+    dibuat = db.Column(db.DateTime, nullable=False)
+    diperbarui = db.Column(db.DateTime, nullable=False)
 
     respons = {
         "dibuat": fields.DateTime,
@@ -45,7 +45,8 @@ class Pengguna(db.Model):
     respons_jwt = {
         "id": fields.Integer,
         "peran": fields.String,
-        "kota": fields.String
+        "kota": fields.String,
+        "terverifikasi": fields.Boolean
     }
 
     def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi, telepon):
@@ -55,6 +56,8 @@ class Pengguna(db.Model):
         self.email = email
         self.kata_sandi = kata_sandi
         self.telepon = telepon
+        self.dibuat = datetime.now()
+        self.diperbarui = datetime.now()
 
     def __repr__(self):
         return "<Pengguna %r>" % self.id
@@ -75,8 +78,8 @@ class Keluhan(db.Model):
     total_dukungan = db.Column(db.Integer, nullable=False, default=0)
     total_komentar = db.Column(db.Integer, nullable=False, default=0)
     anonim = db.Column(db.Boolean, nullable=False, default=False)
-    dibuat = db.Column(db.DateTime, default=datetime.now())
-    diperbarui = db.Column(db.DateTime, default=datetime.now())
+    dibuat = db.Column(db.DateTime, nullable=False)
+    diperbarui = db.Column(db.DateTime, nullable=False)
 
     respons = {
         "dibuat": fields.DateTime,
@@ -97,13 +100,15 @@ class Keluhan(db.Model):
     }
 
     def __init__(self, id_pengguna, foto_sebelum, kota, longitude, latitude, isi, anonim):
-        self.id_pengguna = id_pengguna,
-        self.foto_sebelum = foto_sebelum,
-        self.kota = kota,
-        self.longitude = longitude,
-        self.latitude = latitude,
-        self.isi = isi,
+        self.id_pengguna = id_pengguna
+        self.foto_sebelum = foto_sebelum
+        self.kota = kota
+        self.longitude = longitude
+        self.latitude = latitude
+        self.isi = isi
         self.anonim = anonim
+        self.dibuat = datetime.now()
+        self.diperbarui = datetime.now()
 
     def __repr__(self):
         return "<Keluhan %r>" % self.id

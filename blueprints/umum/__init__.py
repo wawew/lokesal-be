@@ -114,12 +114,13 @@ class UmumKeluhan(Resource):
             }
             for setiap_keluhan in filter_keluhan.all():
                 # mengambil nama pengguna pada setiap keluhan
+                data_keluhan = {}
                 id_pengguna = setiap_keluhan.id_pengguna
                 data_pengguna = Pengguna.query.get(id_pengguna)
                 data_keluhan["nama_depan"] = data_pengguna.nama_depan
                 data_keluhan["nama_belakang"] = data_pengguna.nama_belakang
                 # mengambil detail keluhan
-                data_keluhan["detail_keluhan"] = marshall(setiap_keluhan, Keluhan.respons)
+                data_keluhan["detail_keluhan"] = marshal(setiap_keluhan, Keluhan.respons)
                 daftar_keluhan.append(data_keluhan)
             respons_keluhan["daftar_keluhan"] = daftar_keluhan
             return respons_keluhan, 200, {"Content-Type": "application/json"}
