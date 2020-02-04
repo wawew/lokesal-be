@@ -30,15 +30,21 @@ class Daftar(Resource):
         
         validasi = self.aturan_pwd.test(args["kata_sandi"])
         if validasi == []:
+            # mencari apakah email sudah terdaftar di kota tertentu
             kata_sandi = hashlib.md5(args["kata_sandi"].encode()).hexdigest()
-            pengguna = Pengguna(args["nama_depan"], args["nama_belakang"], args["kota"], args["email"], kata_sandi)
             filter_kota = Pengguna.query.filter_by(kota=args["kota"])
             filter_email = filter_kota.filter_by(email=args["email"])
             if filter_email.all() != []:
                 return {"status": "GAGAL", "message": "Email sudah terdaftar."}, 400, {"Content-Type": "application/json"}
+            # jika email unik pada kota yang ditentukan, pengguna didaftarkan
+            pengguna = Pengguna(args["nama_depan"], args["nama_belakang"], args["kota"], args["email"], kata_sandi)
             db.session.add(pengguna)
             db.session.commit()
-            return marshal(pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"}
+            # setelah didaftarkan, pengguna masuk
+            klaim_pengguna = marshal(pengguna, Pengguna.respons_jwt)
+            klaim_pengguna["peran"] = "pengguna"
+            klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
+            return klaim_pengguna, 200, {"Content-Type": "application/json"}
         return {"status": "GAGAL", "pesan": "Kata sandi tidak sesuai standar."}, 400, {"Content-Type": "application/json"}
 
     def options(self):
