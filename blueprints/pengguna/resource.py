@@ -79,14 +79,17 @@ class PenggunaKomentarKeluhan(Resource):
     def post(self, id=None):
         print("INI ID KELUHAN",id)
         klaim_pengguna = get_jwt_claims()
-        if id is not None and klaim_pengguna["kota"] == Keluhan.query.get(id).kota:
+        if id is not None:
             parser = reqparse.RequestParser()
             parser.add_argument("isi", location="json", required=True)
             args = parser.parse_args()
-            komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id, klaim_pengguna["kota"], args["isi"])
-            db.session.add(komentar_keluhan)
-            db.session.commit()
-            return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
+
+            cari_keluhan = Keluhan.query.get(id)
+            if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id, klaim_pengguna["kota"], args["isi"])
+                db.session.add(komentar_keluhan)
+                db.session.commit()
+                return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
         return {
             "status": "TIDAK_KETEMU",
             "pesan": "Keluhan tidak ditemukan."
