@@ -26,7 +26,6 @@ class Admin(db.Model):
 
     respons_jwt = {
         "id": fields.Integer,
-        "peran": fields.String,
         "kota": fields.String,
         "tingkat": fields.Integer
     }
