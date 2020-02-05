@@ -113,3 +113,37 @@ class Keluhan(db.Model):
 
     def __repr__(self):
         return "<Keluhan %r>" % self.id
+
+
+class KomentarKeluhan(db.Model):
+    __tablename__ = "komentar_keluhan"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_pengguna = db.Column(db.Integer, db.ForeignKey('pengguna.id'), nullable=False)
+    id_keluhan = db.Column(db.Integer, db.ForeignKey('keluhan.id'), nullable=False)
+    kota = db.Column(db.String(20), nullable=False, default="")
+    isi = db.Column(db.String(1000), nullable=False, default="")
+    total_dilaporkan = db.Column(db.Integer, nullable=False, default=0)
+    dibuat = db.Column(db.DateTime, nullable=False)
+    diperbarui = db.Column(db.DateTime, nullable=False)
+
+    respons = {
+        "dibuat": fields.DateTime(dt_format="iso8601"),
+        "diperbarui": fields.DateTime(dt_format="iso8601"),
+        "id": fields.Integer,
+        "id_pengguna": fields.Integer,
+        "id_keluhan": fields.Integer,
+        "kota": fields.String,
+        "isi": fields.String,
+        "total_dilaporkan": fields.Integer
+    }
+
+    def __init__(self, id_pengguna, id_keluhan, kota, isi):
+        self.id_pengguna = id_pengguna
+        self.id_keluhan = id_keluhan
+        self.kota = kota
+        self.isi = isi
+        self.dibuat = datetime.now()
+        self.diperbarui = datetime.now()
+
+    def __repr__(self):
+        return "<Keluhan %r>" % self.id
