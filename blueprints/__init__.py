@@ -98,9 +98,11 @@ def after_request(response):
 from blueprints.umum import blueprint_umum
 from blueprints.pengguna.resource import blueprint_pengguna
 from blueprints.pengembang import blueprint_pengembang
+from blueprints.admin.resource import blueprint_admin
 
 app.register_blueprint(blueprint_umum, url_prefix="")
 app.register_blueprint(blueprint_pengguna, url_prefix="/pengguna")
 app.register_blueprint(blueprint_pengembang, url_prefix="/pengembang")
+app.register_blueprint(blueprint_admin, url_prefix="/admin")
 
 db.create_all()
