@@ -89,8 +89,8 @@ class UmumKeluhan(Resource):
             parser = reqparse.RequestParser()
             parser.add_argument("status", location="args")
             parser.add_argument("kota", location="args", required=True)
-            parser.add_argument("p", type=int, location="args", default=1)
-            parser.add_argument("rp", type=int, location="args", default=10)
+            parser.add_argument("halaman", type=int, location="args", default=1)
+            parser.add_argument("per_halaman", type=int, location="args", default=10)
             args = parser.parse_args()
             
             # filter berdasarkan kota
@@ -102,14 +102,14 @@ class UmumKeluhan(Resource):
                 filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
             # limit keluhan sesuai jumlah per halaman
             total_keluhan = len(filter_keluhan.all())
-            offset = (args["p"] - 1)*args["rp"]
-            filter_keluhan = filter_keluhan.limit(args["rp"]).offset(offset)
-            if total_keluhan%args["rp"] != 0 or total_keluhan == 0: total_halaman = int(total_keluhan/args["rp"]) + 1
-            else: total_halaman = int(total_keluhan/args["rp"])
+            offset = (args["halaman"] - 1)*args["per_halaman"]
+            filter_keluhan = filter_keluhan.limit(args["per_halaman"]).offset(offset)
+            if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0: total_halaman = int(total_keluhan/args["per_halaman"]) + 1
+            else: total_halaman = int(total_keluhan/args["per_halaman"])
             # menyatukan semua keluhan
             respons_keluhan = {
-                "total_keluhan": total_keluhan, "halaman":args["p"],
-                "total_halaman":total_halaman, "per_halaman":args["rp"]
+                "total_keluhan": total_keluhan, "halaman":args["halaman"],
+                "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
             }
             for setiap_keluhan in filter_keluhan.all():
                 data_keluhan = {}
