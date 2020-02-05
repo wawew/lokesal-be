@@ -86,23 +86,22 @@ class UmumKeluhan(Resource):
     def get(self, id=None):
         if id is None:
             daftar_keluhan = []
-            parser =reqparse.RequestParser()
+            parser = reqparse.RequestParser()
             parser.add_argument("status", location="args")
             parser.add_argument("kota", location="args", required=True)
             parser.add_argument("p", type=int, location="args", default=1)
             parser.add_argument("rp", type=int, location="args", default=10)
             args = parser.parse_args()
             
-            filter_keluhan = Keluhan.query
-            total_keluhan = len(filter_keluhan.all())
             # filter berdasarkan kota
-            filter_keluhan = filter_keluhan.filter_by(kota=args["kota"])
+            filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
             # mengurutkan berdasarkan jumlah dukungan
             # mengurutkan berdasarkan tanggal diubah
             # filter berdasarkan status keluhan
             if args["status"] is not None:
                 filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
             # limit keluhan sesuai jumlah per halaman
+            total_keluhan = len(filter_keluhan.all())
             offset = (args["p"] - 1)*args["rp"]
             filter_keluhan = filter_keluhan.limit(args["rp"]).offset(offset)
             if total_keluhan%args["rp"] != 0 or total_keluhan == 0: total_halaman = int(total_keluhan/args["rp"]) + 1
@@ -113,8 +112,8 @@ class UmumKeluhan(Resource):
                 "total_halaman":total_halaman, "per_halaman":args["rp"]
             }
             for setiap_keluhan in filter_keluhan.all():
-                # mengambil nama pengguna pada setiap keluhan
                 data_keluhan = {}
+                # mengambil nama pengguna pada setiap keluhan
                 id_pengguna = setiap_keluhan.id_pengguna
                 data_pengguna = Pengguna.query.get(id_pengguna)
                 data_keluhan["nama_depan"] = data_pengguna.nama_depan
@@ -137,10 +136,8 @@ class UmumKeluhan(Resource):
 class UmumTotalKeluhan(Resource):
     def get(self):
         total_keluhan = {}
-        parser =reqparse.RequestParser()
+        parser = reqparse.RequestParser()
         parser.add_argument("kota", location="args", required=True)
-        parser.add_argument("p", type=int, location="args", default=1)
-        parser.add_argument("rp", type=int, location="args", default=10)
         args = parser.parse_args()
 
         filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
