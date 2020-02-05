@@ -104,8 +104,10 @@ class UmumKeluhan(Resource):
             total_keluhan = len(filter_keluhan.all())
             offset = (args["halaman"] - 1)*args["per_halaman"]
             filter_keluhan = filter_keluhan.limit(args["per_halaman"]).offset(offset)
-            if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0: total_halaman = int(total_keluhan/args["per_halaman"]) + 1
-            else: total_halaman = int(total_keluhan/args["per_halaman"])
+            if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0:
+                total_halaman = int(total_keluhan/args["per_halaman"]) + 1
+            else:
+                total_halaman = int(total_keluhan/args["per_halaman"])
             # menyatukan semua keluhan
             respons_keluhan = {
                 "total_keluhan": total_keluhan, "halaman":args["halaman"],
@@ -126,7 +128,10 @@ class UmumKeluhan(Resource):
         else:
             filter_keluhan = Keluhan.query.get(id)
             if filter_keluhan is None:
-                return {"status": "TIDAK_KETEMU", "pesan": "Keluhan tidak ditemukan."}, 404, {"Content-Type": "application/json"}
+                return {
+                    "status": "TIDAK_KETEMU",
+                    "pesan": "Keluhan tidak ditemukan."
+                }, 404, {"Content-Type": "application/json"}
             return marshal(filter_keluhan, Keluhan.respons), 200, {"Content-Type": "application/json"}
 
     def options(self, id=None):

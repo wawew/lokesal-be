@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import db, harus_pengguna
-from blueprints.pengguna.model import Pengguna, Keluhan
+from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan
 from password_strength import PasswordPolicy
 import hashlib
 
@@ -28,8 +28,10 @@ class PenggunaKeluhan(Resource):
         total_keluhan = len(keluhan_pengguna.all())
         offset = (args["halaman"] - 1)*args["per_halaman"]
         keluhan_pengguna = keluhan_pengguna.limit(args["per_halaman"]).offset(offset)
-        if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0: total_halaman = int(total_keluhan/args["per_halaman"]) + 1
-        else: total_halaman = int(total_keluhan/args["per_halaman"])
+        if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0:
+            total_halaman = int(total_keluhan/args["per_halaman"]) + 1
+        else:
+            total_halaman = int(total_keluhan/args["per_halaman"])
         # menyatukan semua keluhan
         respons_keluhan = {
             "total_keluhan": total_keluhan, "halaman":args["halaman"],
@@ -70,4 +72,32 @@ class PenggunaKeluhan(Resource):
         return 200
 
 
+class PenggunaKomentarKeluhan(Resource):
+    # menambahkan komentar pada keluhan
+    @jwt_required
+    @harus_pengguna
+    def post(self, id=None):
+        print("INI ID KELUHAN",id)
+        klaim_pengguna = get_jwt_claims()
+        if id is not None:
+            parser = reqparse.RequestParser()
+            parser.add_argument("isi", location="json", required=True)
+            args = parser.parse_args()
+
+            cari_keluhan = Keluhan.query.get(id)
+            if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id, klaim_pengguna["kota"], args["isi"])
+                db.session.add(komentar_keluhan)
+                db.session.commit()
+                return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+    def options(self, id=None):
+        return 200
+
+
 api.add_resource(PenggunaKeluhan, "/keluhan")
+api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id>/komentar")
