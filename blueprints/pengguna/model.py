@@ -24,8 +24,8 @@ class Pengguna(db.Model):
     diperbarui = db.Column(db.DateTime, nullable=False)
 
     respons = {
-        "dibuat": fields.DateTime,
-        "diperbarui": fields.DateTime,
+        "dibuat": fields.DateTime(dt_format="iso8601"),
+        "diperbarui": fields.DateTime(dt_format="iso8601"),
         "id": fields.Integer,
         "avatar": fields.String,
         "ktp": fields.String,
@@ -44,7 +44,6 @@ class Pengguna(db.Model):
 
     respons_jwt = {
         "id": fields.Integer,
-        "peran": fields.String,
         "kota": fields.String,
         "terverifikasi": fields.Boolean
     }
@@ -83,8 +82,8 @@ class Keluhan(db.Model):
     diperbarui = db.Column(db.DateTime, nullable=False)
 
     respons = {
-        "dibuat": fields.DateTime,
-        "diperbarui": fields.DateTime,
+        "dibuat": fields.DateTime(dt_format="iso8601"),
+        "diperbarui": fields.DateTime(dt_format="iso8601"),
         "id": fields.Integer,
         "id_pengguna": fields.Integer,
         "foto_sebelum": fields.String,
