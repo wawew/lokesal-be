@@ -77,7 +77,6 @@ class PenggunaKomentarKeluhan(Resource):
     @jwt_required
     @harus_pengguna
     def post(self, id=None):
-        print("INI ID KELUHAN",id)
         klaim_pengguna = get_jwt_claims()
         if id is not None:
             parser = reqparse.RequestParser()
