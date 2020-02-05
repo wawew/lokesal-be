@@ -78,6 +78,7 @@ class Keluhan(db.Model):
     total_dukungan = db.Column(db.Integer, nullable=False, default=0)
     total_komentar = db.Column(db.Integer, nullable=False, default=0)
     anonim = db.Column(db.Boolean, nullable=False, default=False)
+    kepuasan = db.Column(db.Boolean)
     dibuat = db.Column(db.DateTime, nullable=False)
     diperbarui = db.Column(db.DateTime, nullable=False)
 
@@ -95,6 +96,7 @@ class Keluhan(db.Model):
         "status": fields.String,
         "dibaca": fields.Boolean,
         "anonim": fields.Boolean,
+        "kepuasan": fields.Boolean,
         "total_dukungan": fields.Integer,
         "total_komentar": fields.Integer
     }
