@@ -40,3 +40,32 @@ class Admin(db.Model):
 
     def __repr__(self):
         return "<Admin %r>" % self.id
+
+
+class Tanggapan(db.Model):
+    __tablename__ = "tanggapan"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_admin = db.Column(db.Integer, db.ForeignKey('admin.id'), nullable=False)
+    id_keluhan = db.Column(db.Integer, db.ForeignKey('keluhan.id'), nullable=False)
+    isi = db.Column(db.String(1000), nullable=False, default="")
+    dibuat = db.Column(db.DateTime, nullable=False)
+    diperbarui = db.Column(db.DateTime, nullable=False)
+
+    respons = {
+        "dibuat": fields.DateTime(dt_format="iso8601"),
+        "diperbarui": fields.DateTime(dt_format="iso8601"),
+        "id": fields.Integer,
+        "id_pengguna": fields.Integer,
+        "id_keluhan": fields.Integer,
+        "isi": fields.String
+    }
+
+    def __init__(self, id_pengguna, id_keluhan, isi):
+        self.id_pengguna = id_pengguna
+        self.id_keluhan = id_keluhan
+        self.isi = isi
+        self.dibuat = datetime.now()
+        self.diperbarui = datetime.now()
+
+    def __repr__(self):
+        return "<Tanggapan %r>" % self.id
