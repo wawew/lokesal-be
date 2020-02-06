@@ -2,8 +2,9 @@ from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import db, harus_pengguna
-from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan
+from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan, DukungKeluhan
 from password_strength import PasswordPolicy
+from datetime import datetime
 import hashlib
 
 
@@ -106,10 +107,35 @@ class PenggunaDukungKeluhan(Resource):
         if id_keluhan is not None:
             cari_keluhan = Keluhan.query.get(id_keluhan)
             if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
-                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan)
-                db.session.add(komentar_keluhan)
+                # memeriksa apakah pengguna sudah mendukung keluhan atau belum
+                filter_dukungan = DukungKeluhan.query.filter_by(
+                    id_keluhan=id_keluhan, id_pengguna=klaim_pengguna["id"]
+                )
+                # jika belum mendukung, tambah dukungan dan perbarui tabel keluhan
+                if filter_dukungan.all() == []:
+                    dukung_keluhan = DukungKeluhan(klaim_pengguna["id"], id_keluhan)
+                    db.session.add(dukung_keluhan)
+                    total_keluhan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                    cari_keluhan.total_dukungan = total_keluhan
+                    db.session.add(cari_keluhan)
+                    db.session.commit()
+                    return {
+                        "status": "BERHASIL",
+                        "pesan": "Dukungan berhasil ditambahkan.",
+                        "total_keluhan": total_keluhan,
+                        "dukung": True
+                    }, 200, {"Content-Type": "application/json"}
+                # hapus dukungan jika sebelumnya belum mendukung
+                db.session.delete(filter_dukungan.first())
+                total_keluhan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                cari_keluhan.total_dukungan = total_keluhan
                 db.session.commit()
-                return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
+                return {
+                    "status": "BERHASIL",
+                    "pesan": "Dukungan berhasil dihapus.",
+                    "total_keluhan": total_keluhan,
+                    "dukung": False
+                }, 200, {"Content-Type": "application/json"}
         return {
             "status": "TIDAK_KETEMU",
             "pesan": "Keluhan tidak ditemukan."
