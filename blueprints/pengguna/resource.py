@@ -88,8 +88,13 @@ class PenggunaKomentarKeluhan(Resource):
             if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
                 komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
+                total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                cari_keluhan.total_komentar = total_komentar
+                db.session.add(cari_keluhan)
                 db.session.commit()
-                return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
+                respons_komentar_keluhan = marshal(komentar_keluhan, KomentarKeluhan.respons)
+                respons_komentar_keluhan["total_komentar"] = total_komentar
+                return respons_komentar_keluhan, 200, {"Content-Type": "application/json"}
         return {
             "status": "TIDAK_KETEMU",
             "pesan": "Keluhan tidak ditemukan."
@@ -115,20 +120,20 @@ class PenggunaDukungKeluhan(Resource):
                 if filter_dukungan.all() == []:
                     dukung_keluhan = DukungKeluhan(klaim_pengguna["id"], id_keluhan)
                     db.session.add(dukung_keluhan)
-                    total_keluhan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
-                    cari_keluhan.total_dukungan = total_keluhan
+                    total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                    cari_keluhan.total_dukungan = total_dukungan
                     db.session.add(cari_keluhan)
                     db.session.commit()
                     return {
                         "status": "BERHASIL",
                         "pesan": "Dukungan berhasil ditambahkan.",
-                        "total_keluhan": total_keluhan,
+                        "total_dukungan": total_dukungan,
                         "dukung": True
                     }, 200, {"Content-Type": "application/json"}
                 # hapus dukungan jika sebelumnya belum mendukung
                 db.session.delete(filter_dukungan.first())
-                total_keluhan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
-                cari_keluhan.total_dukungan = total_keluhan
+                total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                cari_keluhan.total_dukungan = total_dukungan
                 db.session.commit()
                 return {
                     "status": "BERHASIL",
