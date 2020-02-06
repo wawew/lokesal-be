@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import create_access_token
 from blueprints import db
-from blueprints.pengguna.model import Pengguna, Keluhan
+from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan
 from password_strength import PasswordPolicy
 import hashlib
 
@@ -155,7 +155,52 @@ class UmumTotalKeluhan(Resource):
         return 200
 
 
+class UmumKomentarKeluhan(Resource):
+    # menampilkan semua komentar pada keluhan yang dipilih
+    def get(self, id=None):
+        if id is not None:
+            daftar_komentar = []
+            parser = reqparse.RequestParser()
+            parser.add_argument("halaman", type=int, location="args", default=1)
+            parser.add_argument("per_halaman", type=int, location="args", default=10)
+            args = parser.parse_args()
+
+            # filter berdasarkan id keluhan
+            filter_komentar = KomentarKeluhan.query.filter_by(id_keluhan=id)
+            # limit komentar sesuai jumlah per halaman
+            total_komentar = len(filter_komentar.all())
+            offset = (args["halaman"] - 1)*args["per_halaman"]
+            filter_komentar = filter_komentar.limit(args["per_halaman"]).offset(offset)
+            if total_komentar%args["per_halaman"] != 0 or total_komentar == 0:
+                total_halaman = int(total_komentar/args["per_halaman"]) + 1
+            else:
+                total_halaman = int(total_komentar/args["per_halaman"])
+            # menyatukan semua komentar
+            respons_komentar = {
+                "total_komentar":total_komentar, "halaman":args["halaman"],
+                "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
+            }
+            for setiap_komentar in filter_komentar.all():
+                data_komentar = {}
+                # mengambil nama pengguna pada setiap keluhan
+                id_pengguna = setiap_komentar.id_pengguna
+                data_pengguna = Pengguna.query.get(id_pengguna)
+                data_komentar["avatar"] = data_pengguna.avatar
+                data_komentar["nama_depan"] = data_pengguna.nama_depan
+                data_komentar["nama_belakang"] = data_pengguna.nama_belakang
+                # mengambil detail keluhan
+                data_komentar["detil_komentar"] = marshal(setiap_komentar, KomentarKeluhan.respons)
+                daftar_komentar.append(data_komentar)
+            respons_komentar["daftar_komentar"] = daftar_komentar
+            return respons_komentar, 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+
 api.add_resource(UmumMasuk, "/masuk")
 api.add_resource(UmumDaftar, "/daftar")
 api.add_resource(UmumKeluhan, "/keluhan", "/keluhan/<int:id>")
 api.add_resource(UmumTotalKeluhan, "/total_keluhan")
+api.add_resource(UmumKomentarKeluhan, "/keluhan/<int:id>/komentar")
