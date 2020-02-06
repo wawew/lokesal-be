@@ -3,6 +3,7 @@ from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import create_access_token
 from blueprints import db
 from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan
+from blueprints.admin.model import Tanggapan
 from password_strength import PasswordPolicy
 import hashlib
 
@@ -126,17 +127,23 @@ class UmumKeluhan(Resource):
             respons_keluhan["daftar_keluhan"] = daftar_keluhan
             return respons_keluhan, 200, {"Content-Type": "application/json"}
         else:
-            filter_keluhan = Keluhan.query.get(id)
-            if filter_keluhan is None:
+            cari_keluhan = Keluhan.query.get(id)
+            if cari_keluhan is None:
                 return {
                     "status": "TIDAK_KETEMU",
                     "pesan": "Keluhan tidak ditemukan."
                 }, 404, {"Content-Type": "application/json"}
-            detail_keluhan = marshal(filter_keluhan, Keluhan.respons)
-            id_pengguna = filter_keluhan.id_pengguna
+            detail_keluhan = marshal(cari_keluhan, Keluhan.respons)
+            id_pengguna = cari_keluhan.id_pengguna
             data_pengguna = Pengguna.query.get(id_pengguna)
             detail_keluhan["nama_depan"] = data_pengguna.nama_depan
             detail_keluhan["nama_belakang"] = data_pengguna.nama_belakang
+            # mendapatkan semua tanggapan pada keluhan yang dipilih
+            filter_tanggapan = Tanggapan.query.filter_by(id_keluhan=id)
+            tanggapan_admin = []
+            for setiap_tanggapan in filter_tanggapan.all():
+                tanggapan_admin.append(marshal(setiap_tanggapan, Tanggapan.respons))
+            detail_keluhan["tanggapan_admin"] = tanggapan_admin
             return detail_keluhan, 200, {"Content-Type": "application/json"}
 
     def options(self, id=None):
@@ -202,6 +209,9 @@ class UmumKomentarKeluhan(Resource):
             "status": "TIDAK_KETEMU",
             "pesan": "Keluhan tidak ditemukan."
         }, 404, {"Content-Type": "application/json"}
+
+    def options(self, id=None):
+        return 200
 
 
 api.add_resource(UmumMasuk, "/masuk")

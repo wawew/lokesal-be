@@ -60,8 +60,8 @@ class Tanggapan(db.Model):
         "isi": fields.String
     }
 
-    def __init__(self, id_pengguna, id_keluhan, isi):
-        self.id_pengguna = id_pengguna
+    def __init__(self, id_admin, id_keluhan, isi):
+        self.id_admin = id_admin
         self.id_keluhan = id_keluhan
         self.isi = isi
         self.dibuat = datetime.now()
