@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
-from flask_jwt_extended import create_access_token
-from blueprints import db
+from flask_jwt_extended import create_access_token, jwt_required
+from blueprints import db, harus_admin
 from blueprints.pengguna.model import Pengguna, Keluhan
 from blueprints.admin.model import Admin
 from password_strength import PasswordPolicy
@@ -39,4 +39,18 @@ class AdminMasuk(Resource):
         return 200
 
 
+class AdminKeluhan(Resource):
+    @jwt_required
+    @harus_admin
+    def put(self, id=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument("isi", location="json", required=True)
+        parser.add_argument("foto_sesudah", location="json")
+        args = parser.parse_args()
+
+    def options(self, id=None):
+        return 200
+
+
 api.add_resource(AdminMasuk, "/masuk")
+api.add_resource(AdminKeluhan, "/keluhan/<int:id>")

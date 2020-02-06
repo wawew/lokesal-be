@@ -132,7 +132,12 @@ class UmumKeluhan(Resource):
                     "status": "TIDAK_KETEMU",
                     "pesan": "Keluhan tidak ditemukan."
                 }, 404, {"Content-Type": "application/json"}
-            return marshal(filter_keluhan, Keluhan.respons), 200, {"Content-Type": "application/json"}
+            detail_keluhan = marshal(filter_keluhan, Keluhan.respons)
+            id_pengguna = filter_keluhan.id_pengguna
+            data_pengguna = Pengguna.query.get(id_pengguna)
+            detail_keluhan["nama_depan"] = data_pengguna.nama_depan
+            detail_keluhan["nama_belakang"] = data_pengguna.nama_belakang
+            return detail_keluhan, 200, {"Content-Type": "application/json"}
 
     def options(self, id=None):
         return 200
