@@ -146,4 +146,30 @@ class KomentarKeluhan(db.Model):
         self.diperbarui = datetime.now()
 
     def __repr__(self):
-        return "<Keluhan %r>" % self.id
+        return "<Komentar Keluhan %r>" % self.id
+
+
+class DukungKeluhan(db.Model):
+    __tablename__ = "dukung_keluhan"
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_pengguna = db.Column(db.Integer, db.ForeignKey('pengguna.id'), nullable=False)
+    id_keluhan = db.Column(db.Integer, db.ForeignKey('keluhan.id'), nullable=False)
+    dibuat = db.Column(db.DateTime, nullable=False)
+    diperbarui = db.Column(db.DateTime, nullable=False)
+
+    respons = {
+        "dibuat": fields.DateTime(dt_format="iso8601"),
+        "diperbarui": fields.DateTime(dt_format="iso8601"),
+        "id": fields.Integer,
+        "id_pengguna": fields.Integer,
+        "id_keluhan": fields.Integer
+    }
+
+    def __init__(self, id_pengguna, id_keluhan):
+        self.id_pengguna = id_pengguna
+        self.id_keluhan = id_keluhan
+        self.dibuat = datetime.now()
+        self.diperbarui = datetime.now()
+
+    def __repr__(self):
+        return "<Dukung Keluhan %r>" % self.id

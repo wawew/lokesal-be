@@ -2,8 +2,9 @@ from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints import db, harus_pengguna
-from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan
+from blueprints.pengguna.model import Pengguna, Keluhan, KomentarKeluhan, DukungKeluhan
 from password_strength import PasswordPolicy
+from datetime import datetime
 import hashlib
 
 
@@ -76,27 +77,79 @@ class PenggunaKomentarKeluhan(Resource):
     # menambahkan komentar pada keluhan
     @jwt_required
     @harus_pengguna
-    def post(self, id=None):
+    def post(self, id_keluhan=None):
         klaim_pengguna = get_jwt_claims()
-        if id is not None:
+        if id_keluhan is not None:
             parser = reqparse.RequestParser()
             parser.add_argument("isi", location="json", required=True)
             args = parser.parse_args()
 
-            cari_keluhan = Keluhan.query.get(id)
+            cari_keluhan = Keluhan.query.get(id_keluhan)
             if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
-                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id, klaim_pengguna["kota"], args["isi"])
+                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
+                total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                cari_keluhan.total_komentar = total_komentar
+                db.session.add(cari_keluhan)
                 db.session.commit()
-                return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
+                respons_komentar_keluhan = marshal(komentar_keluhan, KomentarKeluhan.respons)
+                respons_komentar_keluhan["total_komentar"] = total_komentar
+                return respons_komentar_keluhan, 200, {"Content-Type": "application/json"}
         return {
             "status": "TIDAK_KETEMU",
             "pesan": "Keluhan tidak ditemukan."
         }, 404, {"Content-Type": "application/json"}
 
-    def options(self, id=None):
+    def options(self, id_keluhan=None):
+        return 200
+
+
+class PenggunaDukungKeluhan(Resource):
+    @jwt_required
+    @harus_pengguna
+    def put(self, id_keluhan=None):
+        klaim_pengguna = get_jwt_claims()
+        if id_keluhan is not None:
+            cari_keluhan = Keluhan.query.get(id_keluhan)
+            if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                # memeriksa apakah pengguna sudah mendukung keluhan atau belum
+                filter_dukungan = DukungKeluhan.query.filter_by(
+                    id_keluhan=id_keluhan, id_pengguna=klaim_pengguna["id"]
+                )
+                # jika belum mendukung, tambah dukungan dan perbarui tabel keluhan
+                if filter_dukungan.all() == []:
+                    dukung_keluhan = DukungKeluhan(klaim_pengguna["id"], id_keluhan)
+                    db.session.add(dukung_keluhan)
+                    total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                    cari_keluhan.total_dukungan = total_dukungan
+                    db.session.add(cari_keluhan)
+                    db.session.commit()
+                    return {
+                        "status": "BERHASIL",
+                        "pesan": "Dukungan berhasil ditambahkan.",
+                        "total_dukungan": total_dukungan,
+                        "dukung": True
+                    }, 200, {"Content-Type": "application/json"}
+                # hapus dukungan jika sebelumnya belum mendukung
+                db.session.delete(filter_dukungan.first())
+                total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
+                cari_keluhan.total_dukungan = total_dukungan
+                db.session.commit()
+                return {
+                    "status": "BERHASIL",
+                    "pesan": "Dukungan berhasil dihapus.",
+                    "total_keluhan": total_keluhan,
+                    "dukung": False
+                }, 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+    def options(self, id_keluhan=None):
         return 200
 
 
 api.add_resource(PenggunaKeluhan, "/keluhan")
-api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id>/komentar")
+api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar")
+api.add_resource(PenggunaDukungKeluhan, "/keluhan/<int:id_keluhan>/dukungan")
