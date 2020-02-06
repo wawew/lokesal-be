@@ -76,16 +76,16 @@ class PenggunaKomentarKeluhan(Resource):
     # menambahkan komentar pada keluhan
     @jwt_required
     @harus_pengguna
-    def post(self, id=None):
+    def post(self, id_keluhan=None):
         klaim_pengguna = get_jwt_claims()
-        if id is not None:
+        if id_keluhan is not None:
             parser = reqparse.RequestParser()
             parser.add_argument("isi", location="json", required=True)
             args = parser.parse_args()
 
-            cari_keluhan = Keluhan.query.get(id)
+            cari_keluhan = Keluhan.query.get(id_keluhan)
             if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
-                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id, klaim_pengguna["kota"], args["isi"])
+                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
                 db.session.commit()
                 return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
@@ -94,9 +94,31 @@ class PenggunaKomentarKeluhan(Resource):
             "pesan": "Keluhan tidak ditemukan."
         }, 404, {"Content-Type": "application/json"}
 
-    def options(self, id=None):
+    def options(self, id_keluhan=None):
+        return 200
+
+
+class PenggunaDukungKeluhan(Resource):
+    @jwt_required
+    @harus_pengguna
+    def put(self, id_keluhan=None):
+        klaim_pengguna = get_jwt_claims()
+        if id_keluhan is not None:
+            cari_keluhan = Keluhan.query.get(id_keluhan)
+            if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan)
+                db.session.add(komentar_keluhan)
+                db.session.commit()
+                return marshal(komentar_keluhan, KomentarKeluhan.respons), 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+    def options(self, id_keluhan=None):
         return 200
 
 
 api.add_resource(PenggunaKeluhan, "/keluhan")
-api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id>/komentar")
+api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar")
+api.add_resource(PenggunaDukungKeluhan, "/keluhan/<int:id_keluhan>/dukungan")
