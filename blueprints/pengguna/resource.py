@@ -177,6 +177,26 @@ class PenggunaDukungKeluhan(Resource):
         return 200
 
 
+class PenggunaProfil(Resource):
+    @jwt_required
+    @harus_pengguna
+    def get(self):
+        klaim_pengguna = get_jwt_claims()
+        cari_pengguna = Pengguna.query.get(klaim_pengguna["id"])
+        return marshal(cari_pengguna, Pengguna.respons)
+
+    @jwt_required
+    @harus_pengguna
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("avatar", location="json")
+        args = parser.parse_args()
+    
+    def options(self):
+        return 200
+
+
 api.add_resource(PenggunaKeluhan, "/keluhan")
 api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar")
 api.add_resource(PenggunaDukungKeluhan, "/keluhan/<int:id_keluhan>/dukungan")
+api.add_resource(PenggunaProfil, "/profil")
