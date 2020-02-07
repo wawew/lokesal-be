@@ -107,6 +107,33 @@ class PenggunaKomentarKeluhan(Resource):
 class PenggunaDukungKeluhan(Resource):
     @jwt_required
     @harus_pengguna
+    def get(self, id_keluhan=None):
+        klaim_pengguna = get_jwt_claims()
+        if id_keluhan is not None:
+            cari_keluhan = Keluhan.query.get(id_keluhan)
+            if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                # memeriksa apakah pengguna sudah mendukung keluhan atau belum
+                filter_dukungan = DukungKeluhan.query.filter_by(
+                    id_keluhan=id_keluhan, id_pengguna=klaim_pengguna["id"]
+                )
+                if filter_dukungan.all() == []:
+                    return {
+                        "status": "BERHASIL",
+                        "pesan": "Anda belum mendukung keluhan ini.",
+                        "dukung": False
+                    }, 200, {"Content-Type": "application/json"}
+                return {
+                    "status": "BERHASIL",
+                    "pesan": "Anda sudah mendukung keluhan ini.",
+                    "dukung": True
+                }, 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+    @jwt_required
+    @harus_pengguna
     def put(self, id_keluhan=None):
         klaim_pengguna = get_jwt_claims()
         if id_keluhan is not None:
@@ -138,7 +165,7 @@ class PenggunaDukungKeluhan(Resource):
                 return {
                     "status": "BERHASIL",
                     "pesan": "Dukungan berhasil dihapus.",
-                    "total_keluhan": total_keluhan,
+                    "total_dukungan": total_dukungan,
                     "dukung": False
                 }, 200, {"Content-Type": "application/json"}
         return {
