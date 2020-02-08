@@ -66,14 +66,18 @@ class UmumMasuk(Resource):
         
         kata_sandi = hashlib.md5(args["kata_sandi"].encode()).hexdigest()
         filter_kota = Pengguna.query.filter_by(kota=args["kota"])
-        cari_pengguna = filter_kota.filter_by(aktif=True)
-        cari_pengguna = cari_pengguna.filter_by(email=args["email"])
+        cari_pengguna = filter_kota.filter_by(email=args["email"])
         cari_pengguna = cari_pengguna.filter_by(kata_sandi=kata_sandi).first()
         if cari_pengguna is None:
             return {
-                "status": "GAGAL_MASUK", "pesan": "Email atau kata sandi salah."
+                "status": "GAGAL_MASUK",
+                "pesan": "Email atau kata sandi salah."
             }, 401, {"Content-Type": "application/json"}
-        
+        elif cari_pengguna.aktif == False:
+            return {
+                "status": "GAGAL_MASUK",
+                "pesan": "Akun anda telah dinonaktifkan. Silahkan hubungi Admin untuk informasi lebih lanjut"
+            }, 401, {"Content-Type": "application/json"}
         klaim_pengguna = marshal(cari_pengguna, Pengguna.respons_jwt)
         klaim_pengguna["peran"] = "pengguna"
         klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
