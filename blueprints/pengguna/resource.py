@@ -92,8 +92,15 @@ class PenggunaKomentarKeluhan(Resource):
                 cari_keluhan.total_komentar = total_komentar
                 db.session.add(cari_keluhan)
                 db.session.commit()
-                respons_komentar_keluhan = marshal(komentar_keluhan, KomentarKeluhan.respons)
-                respons_komentar_keluhan["total_komentar"] = total_komentar
+                # membentuk detail komentar
+                data_pengguna = Pengguna.query.get(klaim_pengguna["id"])
+                respons_komentar_keluhan = {
+                    "avatar": data_pengguna.avatar,
+                    "nama_depan": data_pengguna.nama_depan,
+                    "nama_belakang": data_pengguna.nama_belakang,
+                    "total_komentar": total_komentar,
+                    "detail_komentar": marshal(komentar_keluhan, KomentarKeluhan.respons)
+                }
                 return respons_komentar_keluhan, 200, {"Content-Type": "application/json"}
         return {
             "status": "TIDAK_KETEMU",

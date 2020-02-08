@@ -204,13 +204,13 @@ class UmumKomentarKeluhan(Resource):
             }
             for setiap_komentar in filter_komentar:
                 data_komentar = {}
-                # mengambil nama pengguna pada setiap keluhan
+                # mengambil nama pengguna pada setiap komentar
                 id_pengguna = setiap_komentar.id_pengguna
                 data_pengguna = Pengguna.query.get(id_pengguna)
                 data_komentar["avatar"] = data_pengguna.avatar
                 data_komentar["nama_depan"] = data_pengguna.nama_depan
                 data_komentar["nama_belakang"] = data_pengguna.nama_belakang
-                # mengambil detail keluhan
+                # mengambil detail komentar
                 data_komentar["detil_komentar"] = marshal(setiap_komentar, KomentarKeluhan.respons)
                 daftar_komentar.append(data_komentar)
             respons_komentar["daftar_komentar"] = daftar_komentar
