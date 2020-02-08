@@ -38,11 +38,20 @@ class UmumDaftar(Resource):
             filter_email = filter_kota.filter_by(email=args["email"])
             filter_telepon = filter_kota.filter_by(telepon=args["telepon"])
             if filter_email.all() != []:
-                return {"status": "GAGAL", "pesan": "Email sudah terdaftar."}, 400, {"Content-Type": "application/json"}
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Email sudah ada yang memakai."
+                }, 400, {"Content-Type": "application/json"}
             if filter_telepon.all() != []:
-                return {"status": "GAGAL", "pesan": "Telepon sudah terdaftar."}, 400, {"Content-Type": "application/json"}
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Nomor telepon sudah ada yang memakai."
+                }, 400, {"Content-Type": "application/json"}
             # jika email dan telepon unik pada kota yang ditentukan, pengguna didaftarkan
-            pengguna = Pengguna(args["nama_depan"], args["nama_belakang"], args["kota"], args["email"], kata_sandi, args["telepon"])
+            pengguna = Pengguna(
+                args["nama_depan"], args["nama_belakang"], args["kota"],
+                args["email"], kata_sandi, args["telepon"]
+            )
             db.session.add(pengguna)
             db.session.commit()
             # setelah didaftarkan, pengguna masuk
@@ -50,7 +59,10 @@ class UmumDaftar(Resource):
             klaim_pengguna["peran"] = "pengguna"
             klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
             return klaim_pengguna, 200, {"Content-Type": "application/json"}
-        return {"status": "GAGAL", "pesan": "Kata sandi tidak sesuai standar."}, 400, {"Content-Type": "application/json"}
+        return {
+            "status": "GAGAL",
+            "pesan": "Kata sandi tidak sesuai standar."
+        }, 400, {"Content-Type": "application/json"}
 
     def options(self):
         return 200

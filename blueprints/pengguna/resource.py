@@ -186,12 +186,19 @@ class PenggunaDukungKeluhan(Resource):
 
 
 class PenggunaProfil(Resource):
+    aturan_pwd = PasswordPolicy.from_names(
+        length=8,
+        uppercase=1,
+        numbers=1,
+        special=1
+    )
+
     @jwt_required
     @harus_pengguna
     def get(self):
         klaim_pengguna = get_jwt_claims()
         cari_pengguna = Pengguna.query.get(klaim_pengguna["id"])
-        return marshal(cari_pengguna, Pengguna.respons)
+        return marshal(cari_pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"}
 
     @jwt_required
     @harus_pengguna
@@ -205,7 +212,7 @@ class PenggunaProfil(Resource):
             "telepon_lama", "telepon_baru"
         ]
         for setiap_arg in argumen:
-            parser.add(setiap_arg, location="json")
+            parser.add_argument(setiap_arg, location="json")
         # parser.add_argument("avatar", location="json")
         # parser.add_argument("nama_depan", location="json")
         # parser.add_argument("nama_belakang", location="json")
@@ -220,26 +227,85 @@ class PenggunaProfil(Resource):
 
         klaim_pengguna = get_jwt_claims()
         cari_pengguna = Pengguna.query.get(klaim_pengguna["id"])
+
+        # pengecekan ketika pengguna mengganti kata sandi
         if args["kata_sandi_lama"] is not None:
             kata_sandi_lama = hashlib.md5(args["kata_sandi_lama"].encode()).hexdigest()
             if kata_sandi_lama != cari_pengguna.kata_sandi:
                 return {
-                    "status": "GAGAL", "pesan": "Kata sandi salah."
+                    "status": "GAGAL",
+                    "pesan": "Kata sandi yang anda masukan salah."
                 }, 401, {"Content-Type": "application/json"}
         if args["kata_sandi_baru"] is not None:
+            validasi = self.aturan_pwd.test(args["kata_sandi_baru"])
+            if validasi != []:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Kata sandi tidak sesuai standar."
+                }, 400, {"Content-Type": "application/json"}
             kata_sandi_baru = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
             if kata_sandi_baru == cari_pengguna.kata_sandi:
                 return {
                     "status": "GAGAL",
                     "pesan": "Kata sandi baru harus berbeda dengan kata sandi lama."
                 }, 400, {"Content-Type": "application/json"}
-            cari_pengguna.kata_sandi_baru = args["kata_sandi_baru"]
+            cari_pengguna.kata_sandi = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
+
+        # pengecekan ketika pengguna mengganti email
+        if args["email_lama"] is not None:
+            if args["email_lama"] != cari_pengguna.email:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Email yang anda masukan salah."
+                }, 400, {"Content-Type": "application/json"}
+        if args["email_baru"] is not None:
+            if args["email_baru"] == cari_pengguna.email:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Email baru harus berbeda dengan email lama."
+                }, 400, {"Content-Type": "application/json"}
+            filter_kota = Pengguna.query.filter_by(kota=klaim_pengguna["kota"])
+            filter_email = filter_kota.filter_by(email=args["email_baru"])
+            if filter_email.all() != []:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Email sudah ada yang memakai."
+                }, 400, {"Content-Type": "application/json"}
+            cari_pengguna.email = args["email_baru"]
+        
+        # pengecekan ketika pengguna mengganti nomor telepon
+        if args["telepon_lama"] is not None:
+            if args["telepon_lama"] != cari_pengguna.telepon:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Nomor telepon yang anda masukan salah."
+                }, 400, {"Content-Type": "application/json"}
+        if args["telepon_baru"] is not None:
+            if args["telepon_baru"] == cari_pengguna.telepon:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Nomor telepon baru harus berbeda dengan nomor telepon lama."
+                }, 400, {"Content-Type": "application/json"}
+            filter_kota = Pengguna.query.filter_by(kota=klaim_pengguna["kota"])
+            filter_telepon = filter_kota.filter_by(telepon=args["telepon_baru"])
+            if filter_telepon.all() != []:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Nomor telepon sudah ada yang memakai."
+                }, 400, {"Content-Type": "application/json"}
+            cari_pengguna.telepon = args["telepon_baru"]
+
         if args["avatar"] is not None:
             cari_pengguna.avatar = args["avatar"]
         if args["nama_depan"] is not None:
             cari_pengguna.nama_depan = args["nama_depan"]
         if args["nama_belakang"] is not None:
             cari_pengguna.nama_belakang = args["nama_belakang"]
+        
+        cari_pengguna.diperbarui = datetime.now()
+        db.session.add(cari_pengguna)
+        db.session.commit()
+        return marshal(cari_pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"} 
 
     def options(self):
         return 200
