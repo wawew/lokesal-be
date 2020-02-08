@@ -149,6 +149,7 @@ class PenggunaDukungKeluhan(Resource):
                     db.session.add(dukung_keluhan)
                     total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                     cari_keluhan.total_dukungan = total_dukungan
+                    db.session.add(cari_keluhan)
                     db.session.commit()
                     return {
                         "status": "BERHASIL",
@@ -160,6 +161,7 @@ class PenggunaDukungKeluhan(Resource):
                 db.session.delete(filter_dukungan.first())
                 total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                 cari_keluhan.total_dukungan = total_dukungan
+                db.session.add(cari_keluhan)
                 db.session.commit()
                 return {
                     "status": "BERHASIL",

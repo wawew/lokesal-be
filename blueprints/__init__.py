@@ -29,8 +29,9 @@ except Exception as error:
     raise error
 
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["JWT_SECRET_KEY"] = "".join(random.choice(string.ascii_letters) for i in range(32))
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(minutes=30)
+app.config["JWT_SECRET_KEY"] = "wawewawewawewaweaweaweLOKESAL"
+# app.config["JWT_SECRET_KEY"] = "".join(random.choice(string.ascii_letters) for i in range(32))
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=365)
 
 
 db = SQLAlchemy(app)
