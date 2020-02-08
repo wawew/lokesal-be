@@ -149,7 +149,6 @@ class PenggunaDukungKeluhan(Resource):
                     db.session.add(dukung_keluhan)
                     total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                     cari_keluhan.total_dukungan = total_dukungan
-                    db.session.add(cari_keluhan)
                     db.session.commit()
                     return {
                         "status": "BERHASIL",
@@ -189,9 +188,50 @@ class PenggunaProfil(Resource):
     @harus_pengguna
     def put(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("avatar", location="json")
+        argumen = [
+            "avatar", "ktp",
+            "nama_depan", "nama_belakang",
+            "email_lama", "email_baru",
+            "kata_sandi_lama", "kata_sandi_baru",
+            "telepon_lama", "telepon_baru"
+        ]
+        for setiap_arg in argumen:
+            parser.add(setiap_arg, location="json")
+        # parser.add_argument("avatar", location="json")
+        # parser.add_argument("nama_depan", location="json")
+        # parser.add_argument("nama_belakang", location="json")
+        # parser.add_argument("email_lama", location="json")
+        # parser.add_argument("email_baru", location="json")
+        # parser.add_argument("kata_sandi_lama", location="json")
+        # parser.add_argument("kata_sandi_baru", location="json")
+        # parser.add_argument("telepon_lama", location="json")
+        # parser.add_argument("telepon_baru", location="json")
+        # parser.add_argument("ktp", location="json")
         args = parser.parse_args()
-    
+
+        klaim_pengguna = get_jwt_claims()
+        cari_pengguna = Pengguna.query.get(klaim_pengguna["id"])
+        if args["kata_sandi_lama"] is not None:
+            kata_sandi_lama = hashlib.md5(args["kata_sandi_lama"].encode()).hexdigest()
+            if kata_sandi_lama != cari_pengguna.kata_sandi:
+                return {
+                    "status": "GAGAL", "pesan": "Kata sandi salah."
+                }, 401, {"Content-Type": "application/json"}
+        if args["kata_sandi_baru"] is not None:
+            kata_sandi_baru = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
+            if kata_sandi_baru == cari_pengguna.kata_sandi:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Kata sandi baru harus berbeda dengan kata sandi lama."
+                }, 400, {"Content-Type": "application/json"}
+            cari_pengguna.kata_sandi_baru = args["kata_sandi_baru"]
+        if args["avatar"] is not None:
+            cari_pengguna.avatar = args["avatar"]
+        if args["nama_depan"] is not None:
+            cari_pengguna.nama_depan = args["nama_depan"]
+        if args["nama_belakang"] is not None:
+            cari_pengguna.nama_belakang = args["nama_belakang"]
+
     def options(self):
         return 200
 

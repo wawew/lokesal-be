@@ -179,20 +179,30 @@ class UmumKomentarKeluhan(Resource):
 
             # filter berdasarkan id keluhan
             filter_komentar = KomentarKeluhan.query.filter_by(id_keluhan=id)
-            # limit komentar sesuai jumlah per halaman
+            # menghitung jumlah per halaman
             total_komentar = len(filter_komentar.all())
-            offset = (args["halaman"] - 1)*args["per_halaman"]
-            filter_komentar = filter_komentar.limit(args["per_halaman"]).offset(offset)
             if total_komentar%args["per_halaman"] != 0 or total_komentar == 0:
                 total_halaman = int(total_komentar/args["per_halaman"]) + 1
             else:
                 total_halaman = int(total_komentar/args["per_halaman"])
+            # menampilkan komentar dari halaman paling belakang
+            offset = (total_halaman - args["halaman"])*args["per_halaman"]
+            offset_baru = (total_komentar%args["per_halaman"]) + offset - args["per_halaman"]
+            per_halaman = args["per_halaman"]
+            # menampilkan komentar kosong jika halaman yang diminta lebih dari total halaman
+            if args["halaman"] > total_komentar:
+                filter_komentar = []
+            else:
+                if offset_baru < 0:
+                    offset_baru = 0
+                    per_halaman = total_komentar%args["per_halaman"]
+                filter_komentar = filter_komentar.limit(per_halaman).offset(offset_baru).all()
             # menyatukan semua komentar
             respons_komentar = {
                 "total_komentar":total_komentar, "halaman":args["halaman"],
                 "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
             }
-            for setiap_komentar in filter_komentar.all():
+            for setiap_komentar in filter_komentar:
                 data_komentar = {}
                 # mengambil nama pengguna pada setiap keluhan
                 id_pengguna = setiap_komentar.id_pengguna
