@@ -213,16 +213,6 @@ class PenggunaProfil(Resource):
         ]
         for setiap_arg in argumen:
             parser.add_argument(setiap_arg, location="json")
-        # parser.add_argument("avatar", location="json")
-        # parser.add_argument("nama_depan", location="json")
-        # parser.add_argument("nama_belakang", location="json")
-        # parser.add_argument("email_lama", location="json")
-        # parser.add_argument("email_baru", location="json")
-        # parser.add_argument("kata_sandi_lama", location="json")
-        # parser.add_argument("kata_sandi_baru", location="json")
-        # parser.add_argument("telepon_lama", location="json")
-        # parser.add_argument("telepon_baru", location="json")
-        # parser.add_argument("ktp", location="json")
         args = parser.parse_args()
 
         klaim_pengguna = get_jwt_claims()
@@ -236,20 +226,21 @@ class PenggunaProfil(Resource):
                     "status": "GAGAL",
                     "pesan": "Kata sandi yang anda masukan salah."
                 }, 401, {"Content-Type": "application/json"}
-        if args["kata_sandi_baru"] is not None:
-            validasi = self.aturan_pwd.test(args["kata_sandi_baru"])
-            if validasi != []:
-                return {
-                    "status": "GAGAL",
-                    "pesan": "Kata sandi tidak sesuai standar."
-                }, 400, {"Content-Type": "application/json"}
-            kata_sandi_baru = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
-            if kata_sandi_baru == cari_pengguna.kata_sandi:
-                return {
-                    "status": "GAGAL",
-                    "pesan": "Kata sandi baru harus berbeda dengan kata sandi lama."
-                }, 400, {"Content-Type": "application/json"}
-            cari_pengguna.kata_sandi = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
+            if args["kata_sandi_baru"] is not None:
+                validasi = self.aturan_pwd.test(args["kata_sandi_baru"])
+                if validasi != []:
+                    return {
+                        "status": "GAGAL",
+                        "pesan": "Kata sandi tidak sesuai standar."
+                    }, 400, {"Content-Type": "application/json"}
+                kata_sandi_baru = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
+                if kata_sandi_baru == cari_pengguna.kata_sandi:
+                    return {
+                        "status": "GAGAL",
+                        "pesan": "Kata sandi baru harus berbeda dengan kata sandi lama."
+                    }, 400, {"Content-Type": "application/json"}
+                cari_pengguna.kata_sandi = hashlib.md5(args["kata_sandi_baru"].encode()).hexdigest()
+                cari_pengguna.diperbarui = datetime.now()
 
         # pengecekan ketika pengguna mengganti email
         if args["email_lama"] is not None:
@@ -258,8 +249,12 @@ class PenggunaProfil(Resource):
                     "status": "GAGAL",
                     "pesan": "Email yang anda masukan salah."
                 }, 400, {"Content-Type": "application/json"}
-        if args["email_baru"] is not None:
-            if args["email_baru"] == cari_pengguna.email:
+            elif not args["email_baru"]:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Email baru tidak boleh kosong."
+                }, 400, {"Content-Type": "application/json"}
+            elif args["email_baru"] == cari_pengguna.email:
                 return {
                     "status": "GAGAL",
                     "pesan": "Email baru harus berbeda dengan email lama."
@@ -272,6 +267,7 @@ class PenggunaProfil(Resource):
                     "pesan": "Email sudah ada yang memakai."
                 }, 400, {"Content-Type": "application/json"}
             cari_pengguna.email = args["email_baru"]
+            cari_pengguna.diperbarui = datetime.now()
         
         # pengecekan ketika pengguna mengganti nomor telepon
         if args["telepon_lama"] is not None:
@@ -280,8 +276,12 @@ class PenggunaProfil(Resource):
                     "status": "GAGAL",
                     "pesan": "Nomor telepon yang anda masukan salah."
                 }, 400, {"Content-Type": "application/json"}
-        if args["telepon_baru"] is not None:
-            if args["telepon_baru"] == cari_pengguna.telepon:
+            elif not args["telepon_baru"]:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Nomor telepon baru tidak boleh kosong."
+                }, 400, {"Content-Type": "application/json"}
+            elif args["telepon_baru"] == cari_pengguna.telepon:
                 return {
                     "status": "GAGAL",
                     "pesan": "Nomor telepon baru harus berbeda dengan nomor telepon lama."
@@ -294,15 +294,18 @@ class PenggunaProfil(Resource):
                     "pesan": "Nomor telepon sudah ada yang memakai."
                 }, 400, {"Content-Type": "application/json"}
             cari_pengguna.telepon = args["telepon_baru"]
+            cari_pengguna.diperbarui = datetime.now()
 
         if args["avatar"] is not None:
             cari_pengguna.avatar = args["avatar"]
-        if args["nama_depan"] is not None:
+            cari_pengguna.diperbarui = datetime.now()
+        if args["nama_depan"]:
             cari_pengguna.nama_depan = args["nama_depan"]
-        if args["nama_belakang"] is not None:
+            cari_pengguna.diperbarui = datetime.now()
+        if args["nama_belakang"]:
             cari_pengguna.nama_belakang = args["nama_belakang"]
+            cari_pengguna.diperbarui = datetime.now()
         
-        cari_pengguna.diperbarui = datetime.now()
         db.session.add(cari_pengguna)
         db.session.commit()
         return marshal(cari_pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"} 
