@@ -227,7 +227,7 @@ class UmumKomentarKeluhan(Resource):
                 data_komentar["nama_depan"] = data_pengguna.nama_depan
                 data_komentar["nama_belakang"] = data_pengguna.nama_belakang
                 # mengambil detail komentar
-                data_komentar["detil_komentar"] = marshal(setiap_komentar, KomentarKeluhan.respons)
+                data_komentar["detail_komentar"] = marshal(setiap_komentar, KomentarKeluhan.respons)
                 daftar_komentar.append(data_komentar)
             respons_komentar["daftar_komentar"] = daftar_komentar
             return respons_komentar, 200, {"Content-Type": "application/json"}
