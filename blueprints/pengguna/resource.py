@@ -295,7 +295,15 @@ class PenggunaProfil(Resource):
                 }, 400, {"Content-Type": "application/json"}
             cari_pengguna.telepon = args["telepon_baru"]
             cari_pengguna.diperbarui = datetime.now()
-
+        
+        if args["ktp"] is not None:
+            if cari_pengguna.terverifikasi:
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Anda tidak dapat mengubah ktp jika telah diverifikasi."
+                }, 400, {"Content-Type": "application/json"}
+            cari_pengguna.ktp = args["ktp"]
+            cari_pengguna.diperbarui = datetime.now()
         if args["avatar"] is not None:
             cari_pengguna.avatar = args["avatar"]
             cari_pengguna.diperbarui = datetime.now()
