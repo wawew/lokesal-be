@@ -99,20 +99,24 @@ class AdminPengguna(Resource):
             parser = reqparse.RequestParser()
             parser.add_argument("kata_kunci", location="args")
             parser.add_argument(
-                "status_aktif", location="args", choices=("aktif", "nonaktif"),
+                "status_aktif", location="args",
+                choices=("aktif", "nonaktif"),
                 help=("Masukan harus 'aktif' atau 'nonaktif'")
             )
             parser.add_argument(
-                "status_terverifikasi", location="args", choices=("sudah", "belum"),
+                "status_terverifikasi", location="args",
+                choices=("sudah", "belum"),
                 help=("Masukan harus 'sudah' atau 'belum'")
             )
             parser.add_argument(
-                "urutkan", location="args", choices=("nama", "diperbarui"),
-                help="Masukan harus 'nama' atau 'diperbarui'"
+                "urutkan_nama", location="args",
+                choices=("nama_naik", "nama_turun"),
+                help="Masukan harus 'nama_naik' atau 'nama_turun'"
             )
             parser.add_argument(
-                "sortir", location="args", choices=("naik", "turun"),
-                help="Masukan harus 'naik' atau 'turun'"
+                "urutkan_diperbarui", location="args",
+                choices=("diperbarui_naik", "diperbarui_turun"),
+                help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
             )
             parser.add_argument("halaman", type=int, location="args", default=1)
             parser.add_argument("per_halaman", type=int, location="args", default=10)
@@ -135,9 +139,17 @@ class AdminPengguna(Resource):
                     Pengguna.email.like("%"+args["kata_kunci"]+"%")
                 ))
             # mengurutkan berdasarkan nama
-            # if args["urutkan"] is not None:
-            #     if args["urutkan"] == "nama":
+            if args["urutkan_nama"] is not None:
+                if args["urutkan_nama"] == "nama_naik":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.asc())
+                elif args["urutkan_nama"] == "nama_turun":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.desc())
             # mengurutkan berdasarkan diperbarui
+            if args["urutkan_diperbarui"] is not None:
+                if args["urutkan_diperbarui"] == "diperbarui_naik":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.asc())
+                elif args["urutkan_diperbarui"] == "diperbarui_turun":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.desc())
             # limit pengguna sesuai jumlah per halaman
             total_pengguna = len(filter_pengguna.all())
             offset = (args["halaman"] - 1)*args["per_halaman"]
