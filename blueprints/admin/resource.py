@@ -181,13 +181,32 @@ class AdminPengguna(Resource):
     @jwt_required
     @harus_admin
     def put(self, id=None):
-        pass
+        klaim_admin = get_jwt_claims()
+        if id is not None:
+            cari_pengguna = Pengguna.query.get(id)
+            if cari_pengguna.kota == klaim_admin["kota"]:
+                cari_pengguna.aktif = False if cari_pengguna.aktif else True
+                cari_pengguna.diperbarui = datetime.now()
+                db.session.add(cari_pengguna)
+                db.session.commit()
+                return marshal(cari_pengguna, Pengguna.respons), 200, {
+                    "Content-Type": "application/json"
+                }
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Pengguna tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
     
     # mengganti status terverifikasi pengguna
     @jwt_required
     @harus_admin
     def post(self, id=None):
-        pass
+        if id is not None:
+            pass
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Pengguna tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
 
     def options(self, id=None):
         pass
