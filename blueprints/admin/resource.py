@@ -33,7 +33,7 @@ class AdminMasuk(Resource):
         
         klaim_admin = marshal(cari_admin, Admin.respons_jwt)
         klaim_admin["peran"] = "admin"
-        klaim_admin["token"] = create_access_token(identity=args["email"], user_claims=klaim_admin)
+        klaim_admin["token"] = create_access_token(identity=cari_admin.id, user_claims=klaim_admin)
         return klaim_admin, 200, {"Content-Type": "application/json"}
 
     def options(self):

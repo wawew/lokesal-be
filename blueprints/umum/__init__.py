@@ -38,19 +38,31 @@ class UmumDaftar(Resource):
             filter_email = filter_kota.filter_by(email=args["email"])
             filter_telepon = filter_kota.filter_by(telepon=args["telepon"])
             if filter_email.all() != []:
-                return {"status": "GAGAL", "pesan": "Email sudah terdaftar."}, 400, {"Content-Type": "application/json"}
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Email sudah ada yang memakai."
+                }, 400, {"Content-Type": "application/json"}
             if filter_telepon.all() != []:
-                return {"status": "GAGAL", "pesan": "Telepon sudah terdaftar."}, 400, {"Content-Type": "application/json"}
+                return {
+                    "status": "GAGAL",
+                    "pesan": "Nomor telepon sudah ada yang memakai."
+                }, 400, {"Content-Type": "application/json"}
             # jika email dan telepon unik pada kota yang ditentukan, pengguna didaftarkan
-            pengguna = Pengguna(args["nama_depan"], args["nama_belakang"], args["kota"], args["email"], kata_sandi, args["telepon"])
+            pengguna = Pengguna(
+                args["nama_depan"], args["nama_belakang"], args["kota"],
+                args["email"], kata_sandi, args["telepon"]
+            )
             db.session.add(pengguna)
             db.session.commit()
             # setelah didaftarkan, pengguna masuk
             klaim_pengguna = marshal(pengguna, Pengguna.respons_jwt)
             klaim_pengguna["peran"] = "pengguna"
-            klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
+            klaim_pengguna["token"] = create_access_token(identity=pengguna.id, user_claims=klaim_pengguna)
             return klaim_pengguna, 200, {"Content-Type": "application/json"}
-        return {"status": "GAGAL", "pesan": "Kata sandi tidak sesuai standar."}, 400, {"Content-Type": "application/json"}
+        return {
+            "status": "GAGAL",
+            "pesan": "Kata sandi tidak sesuai standar."
+        }, 400, {"Content-Type": "application/json"}
 
     def options(self):
         return 200
@@ -66,17 +78,21 @@ class UmumMasuk(Resource):
         
         kata_sandi = hashlib.md5(args["kata_sandi"].encode()).hexdigest()
         filter_kota = Pengguna.query.filter_by(kota=args["kota"])
-        cari_pengguna = filter_kota.filter_by(aktif=True)
-        cari_pengguna = cari_pengguna.filter_by(email=args["email"])
+        cari_pengguna = filter_kota.filter_by(email=args["email"])
         cari_pengguna = cari_pengguna.filter_by(kata_sandi=kata_sandi).first()
         if cari_pengguna is None:
             return {
-                "status": "GAGAL_MASUK", "pesan": "Email atau kata sandi salah."
+                "status": "GAGAL_MASUK",
+                "pesan": "Email atau kata sandi salah."
             }, 401, {"Content-Type": "application/json"}
-        
+        elif cari_pengguna.aktif == False:
+            return {
+                "status": "GAGAL_MASUK",
+                "pesan": "Akun anda telah dinonaktifkan. Silahkan hubungi Admin untuk informasi lebih lanjut."
+            }, 401, {"Content-Type": "application/json"}
         klaim_pengguna = marshal(cari_pengguna, Pengguna.respons_jwt)
         klaim_pengguna["peran"] = "pengguna"
-        klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
+        klaim_pengguna["token"] = create_access_token(identity=cari_pengguna.id, user_claims=klaim_pengguna)
         return klaim_pengguna, 200, {"Content-Type": "application/json"}
 
     def options(self):
@@ -179,28 +195,38 @@ class UmumKomentarKeluhan(Resource):
 
             # filter berdasarkan id keluhan
             filter_komentar = KomentarKeluhan.query.filter_by(id_keluhan=id)
-            # limit komentar sesuai jumlah per halaman
+            # menghitung jumlah per halaman
             total_komentar = len(filter_komentar.all())
-            offset = (args["halaman"] - 1)*args["per_halaman"]
-            filter_komentar = filter_komentar.limit(args["per_halaman"]).offset(offset)
             if total_komentar%args["per_halaman"] != 0 or total_komentar == 0:
                 total_halaman = int(total_komentar/args["per_halaman"]) + 1
             else:
                 total_halaman = int(total_komentar/args["per_halaman"])
+            # menampilkan komentar dari halaman paling belakang
+            offset = (total_halaman - args["halaman"])*args["per_halaman"]
+            offset_baru = (total_komentar%args["per_halaman"]) + offset - args["per_halaman"]
+            per_halaman = args["per_halaman"]
+            # menampilkan komentar kosong jika halaman yang diminta lebih dari total halaman
+            if args["halaman"] > total_komentar:
+                filter_komentar = []
+            else:
+                if offset_baru < 0:
+                    offset_baru = 0
+                    per_halaman = total_komentar%args["per_halaman"]
+                filter_komentar = filter_komentar.limit(per_halaman).offset(offset_baru).all()
             # menyatukan semua komentar
             respons_komentar = {
                 "total_komentar":total_komentar, "halaman":args["halaman"],
                 "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
             }
-            for setiap_komentar in filter_komentar.all():
+            for setiap_komentar in filter_komentar:
                 data_komentar = {}
-                # mengambil nama pengguna pada setiap keluhan
+                # mengambil nama pengguna pada setiap komentar
                 id_pengguna = setiap_komentar.id_pengguna
                 data_pengguna = Pengguna.query.get(id_pengguna)
                 data_komentar["avatar"] = data_pengguna.avatar
                 data_komentar["nama_depan"] = data_pengguna.nama_depan
                 data_komentar["nama_belakang"] = data_pengguna.nama_belakang
-                # mengambil detail keluhan
+                # mengambil detail komentar
                 data_komentar["detil_komentar"] = marshal(setiap_komentar, KomentarKeluhan.respons)
                 daftar_komentar.append(data_komentar)
             respons_komentar["daftar_komentar"] = daftar_komentar
