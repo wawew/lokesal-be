@@ -87,5 +87,68 @@ class AdminKeluhan(Resource):
         return 200
 
 
+class AdminPengguna(Resource):
+    # menampilkan semua pengguna
+    @jwt_required
+    @harus_admin
+    def get(self, id=None):
+        klaim_admin = get_jwt_claims()
+        if id is None:
+            daftar_pengguna = []
+            parser = reqparse.RequestParser()
+            parser.add_argument("halaman", type=int, location="args", default=1)
+            parser.add_argument("per_halaman", type=int, location="args", default=10)
+            args = parser.parse_args()
+            
+            # filter berdasarkan kota
+            filter_keluhan = Keluhan.query.filter_by(kota=klaim_admin["kota"])
+            # mengurutkan berdasarkan jumlah dukungan
+            # mengurutkan berdasarkan tanggal diubah
+            # filter berdasarkan status keluhan
+            if args["status"] is not None:
+                filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
+            # limit keluhan sesuai jumlah per halaman
+            total_keluhan = len(filter_keluhan.all())
+            offset = (args["halaman"] - 1)*args["per_halaman"]
+            filter_keluhan = filter_keluhan.limit(args["per_halaman"]).offset(offset)
+            if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0:
+                total_halaman = int(total_keluhan/args["per_halaman"]) + 1
+            else:
+                total_halaman = int(total_keluhan/args["per_halaman"])
+            # menyatukan semua keluhan
+            respons_keluhan = {
+                "total_keluhan": total_keluhan, "halaman":args["halaman"],
+                "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
+            }
+            for setiap_keluhan in filter_keluhan.all():
+                data_keluhan = {}
+                # mengambil nama pengguna pada setiap keluhan
+                id_pengguna = setiap_keluhan.id_pengguna
+                data_pengguna = Pengguna.query.get(id_pengguna)
+                data_keluhan["nama_depan"] = data_pengguna.nama_depan
+                data_keluhan["nama_belakang"] = data_pengguna.nama_belakang
+                # mengambil detail keluhan
+                data_keluhan["detail_keluhan"] = marshal(setiap_keluhan, Keluhan.respons)
+                daftar_pengguna.append(data_keluhan)
+            respons_keluhan["daftar_pengguna"] = daftar_pengguna
+            return respons_keluhan, 200, {"Content-Type": "application/json"}
+
+    # mengganti status aktif pengguna
+    @jwt_required
+    @harus_admin
+    def put(self, id=None):
+        pass
+    
+    # mengganti status terverifikasi pengguna
+    @jwt_required
+    @harus_admin
+    def post(self, id=None):
+        pass
+
+    def options(self, id=None):
+        pass
+
+
 api.add_resource(AdminMasuk, "/masuk")
 api.add_resource(AdminKeluhan, "/keluhan/<int:id>")
+api.add_resource(AdminPengguna, "/pengguna", "/pengguna/<int:id>")
