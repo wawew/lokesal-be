@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_claims
@@ -28,7 +29,8 @@ class AdminMasuk(Resource):
         cari_admin = cari_admin.filter_by(kata_sandi=kata_sandi).first()
         if cari_admin is None:
             return {
-                "status": "GAGAL_MASUK", "pesan": "Email atau kata sandi salah."
+                "status": "GAGAL_MASUK",
+                "pesan": "Email atau kata sandi salah."
             }, 401, {"Content-Type": "application/json"}
         
         klaim_admin = marshal(cari_admin, Admin.respons_jwt)
@@ -94,44 +96,66 @@ class AdminPengguna(Resource):
     def get(self, id=None):
         klaim_admin = get_jwt_claims()
         if id is None:
-            daftar_pengguna = []
             parser = reqparse.RequestParser()
+            parser.add_argument("kata_kunci", location="args")
+            parser.add_argument(
+                "status_aktif", location="args", choices=("aktif", "nonaktif"),
+                help=("Masukan harus 'aktif' atau 'nonaktif'")
+            )
+            parser.add_argument(
+                "status_terverifikasi", location="args", choices=("sudah", "belum"),
+                help=("Masukan harus 'sudah' atau 'belum'")
+            )
+            parser.add_argument(
+                "urutkan", location="args", choices=("nama", "diperbarui"),
+                help="Masukan harus 'nama' atau 'diperbarui'"
+            )
+            parser.add_argument(
+                "sortir", location="args", choices=("naik", "turun"),
+                help="Masukan harus 'naik' atau 'turun'"
+            )
             parser.add_argument("halaman", type=int, location="args", default=1)
             parser.add_argument("per_halaman", type=int, location="args", default=10)
             args = parser.parse_args()
             
             # filter berdasarkan kota
-            filter_keluhan = Keluhan.query.filter_by(kota=klaim_admin["kota"])
-            # mengurutkan berdasarkan jumlah dukungan
-            # mengurutkan berdasarkan tanggal diubah
-            # filter berdasarkan status keluhan
-            if args["status"] is not None:
-                filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
-            # limit keluhan sesuai jumlah per halaman
-            total_keluhan = len(filter_keluhan.all())
+            filter_pengguna = Pengguna.query.filter_by(kota=klaim_admin["kota"])
+            # filter berdasarkan status aktif
+            if args["status_aktif"] is not None:
+                status_aktif = True if args["status_aktif"] == "aktif" else False
+                filter_pengguna = filter_pengguna.filter_by(aktif=status_aktif)
+            # filter berdasarkan status terverifikasi
+            if args["status_terverifikasi"] is not None:
+                status_terverifikasi = True if args["status_terverifikasi"] == "sudah" else False
+                filter_pengguna = filter_pengguna.filter_by(terverifikasi=status_terverifikasi)
+            # filter nama lengkap dan email berdasarkan kata kunci
+            if args["kata_kunci"] is not None:
+                filter_pengguna = filter_pengguna.filter(or_(
+                    (Pengguna.nama_depan+" "+Pengguna.nama_belakang).like("%"+args["kata_kunci"]+"%"),
+                    Pengguna.email.like("%"+args["kata_kunci"]+"%")
+                ))
+            # mengurutkan berdasarkan nama
+            # if args["urutkan"] is not None:
+            #     if args["urutkan"] == "nama":
+            # mengurutkan berdasarkan diperbarui
+            # limit pengguna sesuai jumlah per halaman
+            total_pengguna = len(filter_pengguna.all())
             offset = (args["halaman"] - 1)*args["per_halaman"]
-            filter_keluhan = filter_keluhan.limit(args["per_halaman"]).offset(offset)
-            if total_keluhan%args["per_halaman"] != 0 or total_keluhan == 0:
-                total_halaman = int(total_keluhan/args["per_halaman"]) + 1
+            filter_pengguna = filter_pengguna.limit(args["per_halaman"]).offset(offset)
+            if total_pengguna%args["per_halaman"] != 0 or total_pengguna == 0:
+                total_halaman = int(total_pengguna/args["per_halaman"]) + 1
             else:
-                total_halaman = int(total_keluhan/args["per_halaman"])
-            # menyatukan semua keluhan
-            respons_keluhan = {
-                "total_keluhan": total_keluhan, "halaman":args["halaman"],
+                total_halaman = int(total_pengguna/args["per_halaman"])
+            # menyatukan semua pengguna
+            respons_pengguna = {
+                "total_pengguna": total_pengguna, "halaman":args["halaman"],
                 "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
             }
-            for setiap_keluhan in filter_keluhan.all():
-                data_keluhan = {}
-                # mengambil nama pengguna pada setiap keluhan
-                id_pengguna = setiap_keluhan.id_pengguna
-                data_pengguna = Pengguna.query.get(id_pengguna)
-                data_keluhan["nama_depan"] = data_pengguna.nama_depan
-                data_keluhan["nama_belakang"] = data_pengguna.nama_belakang
-                # mengambil detail keluhan
-                data_keluhan["detail_keluhan"] = marshal(setiap_keluhan, Keluhan.respons)
-                daftar_pengguna.append(data_keluhan)
-            respons_keluhan["daftar_pengguna"] = daftar_pengguna
-            return respons_keluhan, 200, {"Content-Type": "application/json"}
+            daftar_pengguna = []
+            for setiap_pengguna in filter_pengguna.all():
+                daftar_pengguna.append(marshal(setiap_pengguna, Pengguna.respons))
+            respons_pengguna["daftar_pengguna"] = daftar_pengguna
+            return respons_pengguna, 200, {"Content-Type": "application/json"}
 
     # mengganti status aktif pengguna
     @jwt_required
