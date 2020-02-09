@@ -168,6 +168,14 @@ class AdminPengguna(Resource):
                 daftar_pengguna.append(marshal(setiap_pengguna, Pengguna.respons))
             respons_pengguna["daftar_pengguna"] = daftar_pengguna
             return respons_pengguna, 200, {"Content-Type": "application/json"}
+        else:
+            cari_pengguna = Pengguna.query.get(id)
+            if cari_pengguna.kota != klaim_admin["kota"]:
+                return {
+                    "status": "TIDAK_KETEMU",
+                    "pesan": "Pengguna tidak ditemukan."
+                }, 404, {"Content-Type": "application/json"}
+            return marshal(cari_pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"}
 
     # mengganti status aktif pengguna
     @jwt_required
