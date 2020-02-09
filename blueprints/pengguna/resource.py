@@ -56,7 +56,8 @@ class PenggunaKeluhan(Resource):
         args = parser.parse_args()
 
         # menambahkan keluhan hanya jika pengguna sudah terverifikasi
-        if klaim_pengguna["terverifikasi"]:
+        cari_pengguna = Pengguna.query.get(klaim_pengguna["id"])
+        if cari_pengguna.terverifikasi:
             keluhan = Keluhan(
                 klaim_pengguna["id"], args["foto_sebelum"], klaim_pengguna["kota"],
                 args["longitude"], args["latitude"], args["isi"], args["anonim"]

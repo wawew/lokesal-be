@@ -4,7 +4,11 @@ from flask_jwt_extended import create_access_token, jwt_required
 from blueprints import db, harus_pengembang
 from blueprints.admin.model import Admin
 from password_strength import PasswordPolicy
-import hashlib
+import hashlib, os
+
+
+email_pengembang = os.environ["INI_EMAIL_LOKESAL"]
+kata_sandi_pengembang = os.environ["INI_PWD_LOKESAL"]
 
 
 blueprint_pengembang = Blueprint("pengembang", __name__)
@@ -18,7 +22,7 @@ class PengembangMasuk(Resource):
         parser.add_argument("kata_sandi", location="json", required=True)
         args = parser.parse_args()
         
-        if args["email"] != "super@pengembang.id" or args["kata_sandi"] != "W@wew123":
+        if args["email"] != email_pengembang or args["kata_sandi"] != kata_sandi_pengembang:
             return {
                 "status": "GAGAL_MASUK", "pesan": "Email atau kata sandi salah."
             }, 401, {"Content-Type": "application/json"}

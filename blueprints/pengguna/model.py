@@ -44,8 +44,7 @@ class Pengguna(db.Model):
 
     respons_jwt = {
         "id": fields.Integer,
-        "kota": fields.String,
-        "terverifikasi": fields.Boolean
+        "kota": fields.String
     }
 
     def __init__(self, nama_depan, nama_belakang, kota, email, kata_sandi, telepon):

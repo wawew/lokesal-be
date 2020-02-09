@@ -57,7 +57,7 @@ class UmumDaftar(Resource):
             # setelah didaftarkan, pengguna masuk
             klaim_pengguna = marshal(pengguna, Pengguna.respons_jwt)
             klaim_pengguna["peran"] = "pengguna"
-            klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
+            klaim_pengguna["token"] = create_access_token(identity=pengguna.id, user_claims=klaim_pengguna)
             return klaim_pengguna, 200, {"Content-Type": "application/json"}
         return {
             "status": "GAGAL",
@@ -88,11 +88,11 @@ class UmumMasuk(Resource):
         elif cari_pengguna.aktif == False:
             return {
                 "status": "GAGAL_MASUK",
-                "pesan": "Akun anda telah dinonaktifkan. Silahkan hubungi Admin untuk informasi lebih lanjut"
+                "pesan": "Akun anda telah dinonaktifkan. Silahkan hubungi Admin untuk informasi lebih lanjut."
             }, 401, {"Content-Type": "application/json"}
         klaim_pengguna = marshal(cari_pengguna, Pengguna.respons_jwt)
         klaim_pengguna["peran"] = "pengguna"
-        klaim_pengguna["token"] = create_access_token(identity=args["email"], user_claims=klaim_pengguna)
+        klaim_pengguna["token"] = create_access_token(identity=cari_pengguna.id, user_claims=klaim_pengguna)
         return klaim_pengguna, 200, {"Content-Type": "application/json"}
 
     def options(self):
