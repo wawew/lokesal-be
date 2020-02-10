@@ -114,9 +114,14 @@ class AdminPengguna(Resource):
                 help="Masukan harus 'nama_naik' atau 'nama_turun'"
             )
             parser.add_argument(
-                "urutkan_diperbarui", location="args",
+                "urutkan_diperbarui", location="args", default="diperbarui_turun",
                 choices=("diperbarui_naik", "diperbarui_turun"),
                 help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
+            )
+            parser.add_argument(
+                "urutkan_dibuat", location="args",
+                choices=("dibuat_naik", "dibuat_turun"),
+                help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
             )
             parser.add_argument("halaman", type=int, location="args", default=1)
             parser.add_argument("per_halaman", type=int, location="args", default=10)
@@ -150,6 +155,12 @@ class AdminPengguna(Resource):
                     filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.asc())
                 elif args["urutkan_diperbarui"] == "diperbarui_turun":
                     filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.desc())
+            # mengurutkan berdasarkan dibuat
+            if args["urutkan_dibuat"] is not None:
+                if args["urutkan_dibuat"] == "dibuat_naik":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.asc())
+                elif args["urutkan_dibuat"] == "dibuat_turun":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.desc())
             # limit pengguna sesuai jumlah per halaman
             total_pengguna = len(filter_pengguna.all())
             offset = (args["halaman"] - 1)*args["per_halaman"]
