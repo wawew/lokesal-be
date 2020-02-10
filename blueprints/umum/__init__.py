@@ -104,19 +104,58 @@ class UmumKeluhan(Resource):
         if id is None:
             daftar_keluhan = []
             parser = reqparse.RequestParser()
-            parser.add_argument("status", location="args")
+            parser.add_argument("id_keluhan", location="args")
             parser.add_argument("kota", location="args", required=True)
+            parser.add_argument(
+                "status", location="args",
+                choices=("diterima", "diproses", "selesai"),
+                help=("Masukan harus 'diterima', 'diproses' atau 'selesai'")
+            )
+            parser.add_argument(
+                "urutkan_dukungan", location="args",
+                choices=("dukungan_naik", "dukungan_turun"),
+                help="Masukan harus 'dukungan_naik' atau 'dukungan_turun'"
+            )
+            parser.add_argument(
+                "urutkan_diperbarui", location="args",
+                choices=("diperbarui_naik", "diperbarui_turun"),
+                help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
+            )
+            parser.add_argument(
+                "urutkan_dibuat", location="args", default="dibuat_turun",
+                choices=("dibuat_naik", "dibuat_turun"),
+                help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
+            )
             parser.add_argument("halaman", type=int, location="args", default=1)
             parser.add_argument("per_halaman", type=int, location="args", default=10)
             args = parser.parse_args()
             
             # filter berdasarkan kota
             filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
-            # mengurutkan berdasarkan jumlah dukungan
-            # mengurutkan berdasarkan tanggal diubah
+            # filter id berdasarkan id_keluhan
+            if args["id_keluhan"] is not None:
+                filter_keluhan = filter_keluhan.filter(Keluhan.id.like(args["id_keluhan"]+"%"))
             # filter berdasarkan status keluhan
             if args["status"] is not None:
                 filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
+            # mengurutkan berdasarkan jumlah dukungan
+            if args["urutkan_dukungan"] is not None:
+                if args["urutkan_dukungan"] == "dukungan_naik":
+                    filter_keluhan = filter_keluhan.order_by(Keluhan.total_dukungan.asc())
+                elif args["urutkan_dukungan"] == "dukungan_turun":
+                    filter_keluhan = filter_keluhan.order_by(Keluhan.total_dukungan.desc())
+            # mengurutkan berdasarkan diperbarui
+            if args["urutkan_diperbarui"] is not None:
+                if args["urutkan_diperbarui"] == "diperbarui_naik":
+                    filter_keluhan = filter_keluhan.order_by(Keluhan.diperbarui.asc())
+                elif args["urutkan_diperbarui"] == "diperbarui_turun":
+                    filter_keluhan = filter_keluhan.order_by(Keluhan.diperbarui.desc())
+            # mengurutkan berdasarkan dibuat
+            if args["urutkan_dibuat"] is not None:
+                if args["urutkan_dibuat"] == "dibuat_naik":
+                    filter_keluhan = filter_keluhan.order_by(Keluhan.dibuat.asc())
+                elif args["urutkan_dibuat"] == "dibuat_turun":
+                    filter_keluhan = filter_keluhan.order_by(Keluhan.dibuat.desc())
             # limit keluhan sesuai jumlah per halaman
             total_keluhan = len(filter_keluhan.all())
             offset = (args["halaman"] - 1)*args["per_halaman"]
