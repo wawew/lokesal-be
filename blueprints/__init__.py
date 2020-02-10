@@ -1,7 +1,7 @@
 from flask_cors import CORS
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
-from flask_sqlalchemy import SQLAlchemy, sqlalchemy
+from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_claims
