@@ -78,7 +78,7 @@ class PenggunaKomentarKeluhan(Resource):
     # menambahkan komentar pada keluhan
     @jwt_required
     @harus_pengguna
-    def post(self, id_keluhan=None):
+    def post(self, id_keluhan=None, id_komentar=None):
         klaim_pengguna = get_jwt_claims()
         if id_keluhan is not None:
             parser = reqparse.RequestParser()
@@ -108,7 +108,27 @@ class PenggunaKomentarKeluhan(Resource):
             "pesan": "Keluhan tidak ditemukan."
         }, 404, {"Content-Type": "application/json"}
 
-    def options(self, id_keluhan=None):
+    # melaporakan komentar oleh pengguna
+    @jwt_required
+    @harus_pengguna
+    def put(self, id_keluhan=None, id_komentar=None):
+        klaim_pengguna = get_jwt_claims()
+        if id_komentar is not None:
+            cari_komentar = KomentarKeluhan.query.get(id_komentar)
+            if cari_komentar is not None and cari_komentar.kota == klaim_pengguna["kota"]:
+                cari_komentar.total_dilaporkan += 1
+                cari_komentar.diperbarui = datetime.now()
+                db.session.commit()
+                return {
+                    "status": "BERHASIL",
+                    "pesan": "Komentar berhasil dilaporkan."
+                }, 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Komentar tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+    def options(self, id_keluhan=None, id_komentar=None):
         return 200
 
 
@@ -157,7 +177,6 @@ class PenggunaDukungKeluhan(Resource):
                     db.session.add(dukung_keluhan)
                     total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                     cari_keluhan.total_dukungan = total_dukungan
-                    db.session.add(cari_keluhan)
                     db.session.commit()
                     return {
                         "status": "BERHASIL",
@@ -169,7 +188,6 @@ class PenggunaDukungKeluhan(Resource):
                 db.session.delete(filter_dukungan.first())
                 total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                 cari_keluhan.total_dukungan = total_dukungan
-                db.session.add(cari_keluhan)
                 db.session.commit()
                 return {
                     "status": "BERHASIL",
@@ -324,6 +342,6 @@ class PenggunaProfil(Resource):
 
 
 api.add_resource(PenggunaKeluhan, "/keluhan")
-api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar")
+api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar", "/keluhan/komentar/<int:id_komentar>")
 api.add_resource(PenggunaDukungKeluhan, "/keluhan/<int:id_keluhan>/dukungan")
 api.add_resource(PenggunaProfil, "/profil")
