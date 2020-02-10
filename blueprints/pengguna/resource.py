@@ -16,7 +16,7 @@ class PenggunaKeluhan(Resource):
     # melihat riwayat keluhan
     @jwt_required
     @harus_pengguna
-    def get(self):
+    def get(self, id=None):
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument("halaman", type=int, location="args", default=1)
@@ -47,7 +47,7 @@ class PenggunaKeluhan(Resource):
     # membuat keluhan baru
     @jwt_required
     @harus_pengguna
-    def post(self):
+    def post(self, id=None):
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument("foto_sebelum", location="json", required=True)
@@ -75,11 +75,36 @@ class PenggunaKeluhan(Resource):
     # memberi ulasan puas atau tidak terhadap keluhan yang sudah selesai
     @jwt_required
     @harus_pengguna
-    def put(self):
+    def put(self, id=None):
         klaim_pengguna = get_jwt_claims()
-        pass
+        if id is not None:
+            parser = reqparse.RequestParser()
+            parser.add_argument(
+                "kepuasan", location="json", choices=("puas", "tidak_puas"),
+                help="Masukan harus 'puas' atau 'tidak_puas'", required=True
+            )
+            args = parser.parse_args()
+            cari_keluhan = Keluhan.query.get(id)
+            if cari_keluhan is not None:
+                if cari_keluhan.id_pengguna == klaim_pengguna["id"]:
+                    if cari_keluhan.kepuasan is None:
+                        cari_keluhan.kepuasan = True if args["kepuasan"] == "puas" else False
+                        db.session.commit()
+                        return marshal(cari_keluhan, Keluhan.respons), 200, {"Content-Type": "application/json"}
+                    return {
+                        "status": "GAGAL",
+                        "pesan": "Anda telah memberi ulasan pada keluhan ini."
+                    }, 400, {"Content-Type": "application/json"}
+                return {
+                    "status": "DILARANG",
+                    "pesan": "Hanya pengguna yang membuat keluhan ini yang berhak memberi ulasan."
+                }, 403, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
 
-    def options(self):
+    def options(self, id=None):
         return 200
 
 
@@ -338,7 +363,7 @@ class PenggunaProfil(Resource):
         return 200
 
 
-api.add_resource(PenggunaKeluhan, "/keluhan")
+api.add_resource(PenggunaKeluhan, "/keluhan", "/keluhan/<int:id>")
 api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar")
 api.add_resource(PenggunaDukungKeluhan, "/keluhan/<int:id_keluhan>/dukungan")
 api.add_resource(PenggunaProfil, "/profil")
