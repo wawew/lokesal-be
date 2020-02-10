@@ -304,6 +304,25 @@ class AdminKomentarKeluhan(Resource):
         respons_komentar["daftar_komentar"] = daftar_komentar
         return respons_komentar, 200, {"Content-Type": "application/json"}
 
+    # menghapus komentar keluhan dengan id tertentu
+    @jwt_required
+    @harus_admin
+    def delete(self, id=None):
+        klaim_admin = get_jwt_claims()
+        if id is not None:
+            cari_komentar = KomentarKeluhan.query.get(id)
+            if cari_komentar is not None and cari_komentar.kota == klaim_admin["kota"]:
+                db.session.delete(cari_komentar)
+                db.session.commit()
+                return {
+                    "status": "BERHASIL",
+                    "pesan": "Komentar dengan ID {id} berhasil dihapus.".format(id=id)
+                }, 200, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Komentar tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
     def options(self, id=None):
         pass
 
