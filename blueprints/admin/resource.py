@@ -230,77 +230,79 @@ class AdminKomentarKeluhan(Resource):
     @harus_admin
     def get(self, id=None):
         klaim_admin = get_jwt_claims()
-        if id is not None:
-            parser = reqparse.RequestParser()
-            parser.add_argument("id_komentar", location="args")
-            parser.add_argument(
-                "urutkan_laporan", location="args", default="laporan_turun",
-                choices=("laporan_naik", "laporan_turun"),
-                help="Masukan harus 'laporan_naik' atau 'laporan_turun'"
-            )
-            parser.add_argument(
-                "urutkan_diperbarui", location="args",
-                choices=("diperbarui_naik", "diperbarui_turun"),
-                help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
-            )
-            parser.add_argument(
-                "urutkan_dibuat", location="args",
-                choices=("dibuat_naik", "dibuat_turun"),
-                help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
-            )
-            parser.add_argument("halaman", type=int, location="args", default=1)
-            parser.add_argument("per_halaman", type=int, location="args", default=10)
-            args = parser.parse_args()
-            
-            # filter berdasarkan kota
-            filter_komentar = KomentarKeluhan.query.filter_by(kota=klaim_admin["kota"])
-            # mengurutkan berdasarkan total laporan
-            if args["urutkan_laporan"] is not None:
-                if args["urutkan_laporan"] == "laporan_naik":
-                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.total_dilaporkan.asc())
-                elif args["urutkan_laporan"] == "laporan_turun":
-                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.total_dilaporkan.desc())
-            # mengurutkan berdasarkan diperbarui
-            if args["urutkan_diperbarui"] is not None:
-                if args["urutkan_diperbarui"] == "diperbarui_naik":
-                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.asc())
-                elif args["urutkan_diperbarui"] == "diperbarui_turun":
-                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.desc())
-            # mengurutkan berdasarkan dibuat
-            if args["urutkan_dibuat"] is not None:
-                if args["urutkan_dibuat"] == "dibuat_naik":
-                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.dibuat.asc())
-                elif args["urutkan_dibuat"] == "dibuat_turun":
-                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.dibuat.desc())
-            # limit komentar sesuai jumlah per halaman
-            total_komentar = len(filter_komentar.all())
-            offset = (args["halaman"] - 1)*args["per_halaman"]
-            filter_komentar = filter_komentar.limit(args["per_halaman"]).offset(offset)
-            if total_komentar%args["per_halaman"] != 0 or total_komentar == 0:
-                total_halaman = int(total_komentar/args["per_halaman"]) + 1
-            else:
-                total_halaman = int(total_komentar/args["per_halaman"])
-            # menyatukan semua komentar
-            respons_komentar = {
-                "total_komentar": total_komentar, "halaman":args["halaman"],
-                "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
+        parser = reqparse.RequestParser()
+        parser.add_argument("id_komentar", location="args")
+        parser.add_argument(
+            "urutkan_laporan", location="args", default="laporan_turun",
+            choices=("laporan_naik", "laporan_turun"),
+            help="Masukan harus 'laporan_naik' atau 'laporan_turun'"
+        )
+        parser.add_argument(
+            "urutkan_diperbarui", location="args",
+            choices=("diperbarui_naik", "diperbarui_turun"),
+            help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
+        )
+        parser.add_argument(
+            "urutkan_dibuat", location="args",
+            choices=("dibuat_naik", "dibuat_turun"),
+            help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
+        )
+        parser.add_argument("halaman", type=int, location="args", default=1)
+        parser.add_argument("per_halaman", type=int, location="args", default=10)
+        args = parser.parse_args()
+        
+        # filter berdasarkan kota
+        filter_komentar = KomentarKeluhan.query.filter_by(kota=klaim_admin["kota"])
+        # filter berdasarkan id komentar
+        if args["id_komentar"] is not None:
+            filter_komentar = filter_komentar.filter(KomentarKeluhan.id.like(args["id_komentar"]+"%"))
+        # mengurutkan berdasarkan total laporan
+        if args["urutkan_laporan"] is not None:
+            if args["urutkan_laporan"] == "laporan_naik":
+                filter_komentar = filter_komentar.order_by(KomentarKeluhan.total_dilaporkan.asc())
+            elif args["urutkan_laporan"] == "laporan_turun":
+                filter_komentar = filter_komentar.order_by(KomentarKeluhan.total_dilaporkan.desc())
+        # mengurutkan berdasarkan diperbarui
+        if args["urutkan_diperbarui"] is not None:
+            if args["urutkan_diperbarui"] == "diperbarui_naik":
+                filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.asc())
+            elif args["urutkan_diperbarui"] == "diperbarui_turun":
+                filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.desc())
+        # mengurutkan berdasarkan dibuat
+        if args["urutkan_dibuat"] is not None:
+            if args["urutkan_dibuat"] == "dibuat_naik":
+                filter_komentar = filter_komentar.order_by(KomentarKeluhan.dibuat.asc())
+            elif args["urutkan_dibuat"] == "dibuat_turun":
+                filter_komentar = filter_komentar.order_by(KomentarKeluhan.dibuat.desc())
+        # limit komentar sesuai jumlah per halaman
+        total_komentar = len(filter_komentar.all())
+        offset = (args["halaman"] - 1)*args["per_halaman"]
+        filter_komentar = filter_komentar.limit(args["per_halaman"]).offset(offset)
+        if total_komentar%args["per_halaman"] != 0 or total_komentar == 0:
+            total_halaman = int(total_komentar/args["per_halaman"]) + 1
+        else:
+            total_halaman = int(total_komentar/args["per_halaman"])
+        # menyatukan semua komentar
+        respons_komentar = {
+            "total_komentar": total_komentar, "halaman":args["halaman"],
+            "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
+        }
+        daftar_komentar = []
+        for setiap_komentar in filter_komentar.all():
+            # mengambil nama pengguna dan email pada setiap komentar
+            id_pengguna = setiap_komentar.id_pengguna
+            data_pengguna = Pengguna.query.get(id_pengguna)
+            # mengambil detail komentar
+            data_komentar = {
+                "avatar": data_pengguna.avatar,
+                "email": data_pengguna.email,
+                "nama_depan": data_pengguna.nama_depan,
+                "nama_belakang": data_pengguna.nama_belakang,
+                "detail_komentar": marshal(setiap_komentar, KomentarKeluhan.respons)
             }
-            daftar_komentar = []
-            for setiap_komentar in filter_komentar.all():
-                # mengambil nama pengguna dan email pada setiap komentar
-                id_pengguna = setiap_komentar.id_pengguna
-                data_pengguna = Pengguna.query.get(id_pengguna)
-                # mengambil detail komentar
-                data_komentar = {
-                    "avatar": data_pengguna.avatar,
-                    "email": data_pengguna.email,
-                    "nama_depan": data_pengguna.nama_depan,
-                    "nama_belakang": data_pengguna.nama_belakang,
-                    "detail_komentar": marshal(setiap_komentar, KomentarKeluhan.respons)
-                }
-                daftar_komentar.append(data_komentar)
-            respons_komentar["daftar_komentar"] = daftar_komentar
-            return respons_komentar, 200, {"Content-Type": "application/json"}
+            daftar_komentar.append(data_komentar)
+        respons_komentar["daftar_komentar"] = daftar_komentar
+        return respons_komentar, 200, {"Content-Type": "application/json"}
 
     def options(self, id=None):
         pass
