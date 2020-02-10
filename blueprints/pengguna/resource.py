@@ -96,6 +96,11 @@ class PenggunaKomentarKeluhan(Resource):
 
             cari_keluhan = Keluhan.query.get(id_keluhan)
             if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                if not args["isi"]:
+                    return {
+                        "status": "GAGAL",
+                        "pesan": "Komentar tidak boleh kosong."
+                    }, 400, {"Content-Type": "application/json"}
                 komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
                 total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
