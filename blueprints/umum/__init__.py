@@ -100,6 +100,7 @@ class UmumMasuk(Resource):
 
 
 class UmumKeluhan(Resource):
+    # menampilkan semua keluhan pengguna
     def get(self, id=None):
         if id is None:
             daftar_keluhan = []
