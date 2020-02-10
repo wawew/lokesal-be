@@ -13,10 +13,10 @@ api = Api(blueprint_pengguna)
 
 
 class PenggunaKeluhan(Resource):
+    # melihat riwayat keluhan
     @jwt_required
     @harus_pengguna
     def get(self):
-        daftar_keluhan = []
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument("halaman", type=int, location="args", default=1)
@@ -38,11 +38,13 @@ class PenggunaKeluhan(Resource):
             "total_keluhan": total_keluhan, "halaman":args["halaman"],
             "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
         }
+        daftar_keluhan = []
         for setiap_keluhan in keluhan_pengguna.all():
             daftar_keluhan.append(marshal(setiap_keluhan, Keluhan.respons))
         respons_keluhan["daftar_keluhan"] = daftar_keluhan
         return respons_keluhan, 200, {"Content-Type": "application/json"}
 
+    # membuat keluhan baru
     @jwt_required
     @harus_pengguna
     def post(self):
@@ -69,7 +71,14 @@ class PenggunaKeluhan(Resource):
             "status": "GAGAL",
             "pesan": "Anda harus terverifikasi untuk dapat membuat keluhan."
         }, 400, {"Content-Type": "application/json"}
-        
+
+    # memberi ulasan puas atau tidak terhadap keluhan yang sudah selesai
+    @jwt_required
+    @harus_pengguna
+    def put(self):
+        klaim_pengguna = get_jwt_claims()
+        pass
+
     def options(self):
         return 200
 
@@ -91,7 +100,6 @@ class PenggunaKomentarKeluhan(Resource):
                 db.session.add(komentar_keluhan)
                 total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                 cari_keluhan.total_komentar = total_komentar
-                db.session.add(cari_keluhan)
                 db.session.commit()
                 # membentuk detail komentar
                 data_pengguna = Pengguna.query.get(klaim_pengguna["id"])
@@ -113,6 +121,7 @@ class PenggunaKomentarKeluhan(Resource):
 
 
 class PenggunaDukungKeluhan(Resource):
+    # melihat status apakah pengguna sudah mendukung keluhan atau belum
     @jwt_required
     @harus_pengguna
     def get(self, id_keluhan=None):
@@ -140,6 +149,7 @@ class PenggunaDukungKeluhan(Resource):
             "pesan": "Keluhan tidak ditemukan."
         }, 404, {"Content-Type": "application/json"}
 
+    # melakukan atau membatalkan dukungan terhadap suatu keluhan
     @jwt_required
     @harus_pengguna
     def put(self, id_keluhan=None):
@@ -194,6 +204,7 @@ class PenggunaProfil(Resource):
         special=1
     )
 
+    # menampilkan detail profil pengguna
     @jwt_required
     @harus_pengguna
     def get(self):
@@ -315,7 +326,6 @@ class PenggunaProfil(Resource):
             cari_pengguna.nama_belakang = args["nama_belakang"]
             cari_pengguna.diperbarui = datetime.now()
         
-        db.session.add(cari_pengguna)
         db.session.commit()
         return marshal(cari_pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"} 
 
