@@ -113,6 +113,11 @@ class UmumKeluhan(Resource):
                 help=("Masukan harus 'diterima', 'diproses' atau 'selesai'")
             )
             parser.add_argument(
+                "kepuasan", location="args",
+                choices=("puas", "tidak_puas", "belum"),
+                help=("Masukan harus 'puas', 'tidak_puas' atau 'belum'")
+            )
+            parser.add_argument(
                 "urutkan_dukungan", location="args",
                 choices=("dukungan_naik", "dukungan_turun"),
                 help="Masukan harus 'dukungan_naik' atau 'dukungan_turun'"
@@ -139,6 +144,14 @@ class UmumKeluhan(Resource):
             # filter berdasarkan status keluhan
             if args["status"] is not None:
                 filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
+            # mengurutkan berdasarkan tingkat kepuasan
+            if args["kepuasan"] is not None:
+                if args["kepuasan"] == "puas":
+                    filter_keluhan = filter_keluhan.filter_by(kepuasan=True)
+                elif args["kepuasan"] == "tidak_puas":
+                    filter_keluhan = filter_keluhan.filter_by(kepuasan=False)
+                elif args["kepuasan"] == "belum":
+                    filter_keluhan = filter_keluhan.filter_by(kepuasan=None)
             # mengurutkan berdasarkan jumlah dukungan
             if args["urutkan_dukungan"] is not None:
                 if args["urutkan_dukungan"] == "dukungan_naik":
