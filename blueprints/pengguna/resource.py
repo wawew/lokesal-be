@@ -19,12 +19,31 @@ class PenggunaKeluhan(Resource):
     def get(self, id=None):
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
+        parser.add_argument(
+            "status", location="args",
+            choices=("diterima", "diproses", "selesai"),
+            help=("Masukan harus 'diterima', 'diproses' atau 'selesai'")
+        )
+        parser.add_argument(
+            "urutkan_dibuat", location="args", default="dibuat_turun",
+            choices=("dibuat_naik", "dibuat_turun"),
+            help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
+        )
         parser.add_argument("halaman", type=int, location="args", default=1)
         parser.add_argument("per_halaman", type=int, location="args", default=10)
         args = parser.parse_args()
 
         # filter keluhan berdasarkan pengguna saat ini
         keluhan_pengguna = Keluhan.query.filter_by(id_pengguna=klaim_pengguna["id"])
+        # filter berdasarkan status keluhan
+        if args["status"] is not None:
+            keluhan_pengguna = keluhan_pengguna.filter(Keluhan.status.like("%"+args["status"]+"%"))
+        # mengurutkan berdasarkan dibuat
+        if args["urutkan_dibuat"] is not None:
+            if args["urutkan_dibuat"] == "dibuat_naik":
+                keluhan_pengguna = keluhan_pengguna.order_by(Keluhan.dibuat.asc())
+            elif args["urutkan_dibuat"] == "dibuat_turun":
+                keluhan_pengguna = keluhan_pengguna.order_by(Keluhan.dibuat.desc())
         # limit keluhan sesuai jumlah per halaman
         total_keluhan = len(keluhan_pengguna.all())
         offset = (args["halaman"] - 1)*args["per_halaman"]
