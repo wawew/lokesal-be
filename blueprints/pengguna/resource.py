@@ -128,9 +128,8 @@ class PenggunaKomentarKeluhan(Resource):
                     }, 400, {"Content-Type": "application/json"}
                 komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
-                total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
-                cari_keluhan.total_komentar = total_komentar
                 db.session.commit()
+                total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                 # membentuk detail komentar
                 data_pengguna = Pengguna.query.get(klaim_pengguna["id"])
                 respons_komentar_keluhan = {
@@ -215,9 +214,8 @@ class PenggunaDukungKeluhan(Resource):
                 if filter_dukungan.all() == []:
                     dukung_keluhan = DukungKeluhan(klaim_pengguna["id"], id_keluhan)
                     db.session.add(dukung_keluhan)
-                    total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
-                    cari_keluhan.total_dukungan = total_dukungan
                     db.session.commit()
+                    total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                     return {
                         "status": "BERHASIL",
                         "pesan": "Dukungan berhasil ditambahkan.",

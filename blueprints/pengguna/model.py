@@ -74,8 +74,6 @@ class Keluhan(db.Model):
     isi = db.Column(db.String(1000), nullable=False, default="")
     status = db.Column(db.String(10), nullable=False, default="diterima")
     dibaca = db.Column(db.Boolean, nullable=False, default=True)
-    total_dukungan = db.Column(db.Integer, nullable=False, default=0)
-    total_komentar = db.Column(db.Integer, nullable=False, default=0)
     anonim = db.Column(db.Boolean, nullable=False, default=False)
     kepuasan = db.Column(db.Boolean)
     dibuat = db.Column(db.DateTime, nullable=False)
@@ -95,9 +93,7 @@ class Keluhan(db.Model):
         "status": fields.String,
         "dibaca": fields.Boolean,
         "anonim": fields.Boolean,
-        "kepuasan": fields.Boolean,
-        "total_dukungan": fields.Integer,
-        "total_komentar": fields.Integer
+        "kepuasan": fields.Boolean
     }
 
     def __init__(self, id_pengguna, foto_sebelum, kota, longitude, latitude, isi, anonim):
