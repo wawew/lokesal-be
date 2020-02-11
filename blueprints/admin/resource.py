@@ -97,27 +97,27 @@ class AdminPengguna(Resource):
         parser.add_argument("kata_kunci", location="args")
         parser.add_argument(
             "status_aktif", location="args",
-            choices=("aktif", "nonaktif"),
+            choices=("aktif", "nonaktif", ""),
             help=("Masukan harus 'aktif' atau 'nonaktif'")
         )
         parser.add_argument(
             "status_terverifikasi", location="args",
-            choices=("sudah", "belum"),
+            choices=("sudah", "belum", ""),
             help=("Masukan harus 'sudah' atau 'belum'")
         )
         parser.add_argument(
             "urutkan_nama", location="args",
-            choices=("nama_naik", "nama_turun"),
+            choices=("nama_naik", "nama_turun", ""),
             help="Masukan harus 'nama_naik' atau 'nama_turun'"
         )
         parser.add_argument(
             "urutkan_diperbarui", location="args", default="diperbarui_turun",
-            choices=("diperbarui_naik", "diperbarui_turun"),
+            choices=("diperbarui_naik", "diperbarui_turun", ""),
             help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
         )
         parser.add_argument(
             "urutkan_dibuat", location="args",
-            choices=("dibuat_naik", "dibuat_turun"),
+            choices=("dibuat_naik", "dibuat_turun", ""),
             help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
         )
         parser.add_argument("halaman", type=int, location="args", default=1)
@@ -127,33 +127,33 @@ class AdminPengguna(Resource):
         # filter berdasarkan kota
         filter_pengguna = Pengguna.query.filter_by(kota=klaim_admin["kota"])
         # filter berdasarkan status aktif
-        if args["status_aktif"] is not None:
+        if args["status_aktif"]:
             status_aktif = True if args["status_aktif"] == "aktif" else False
             filter_pengguna = filter_pengguna.filter_by(aktif=status_aktif)
         # filter berdasarkan status terverifikasi
-        if args["status_terverifikasi"] is not None:
+        if args["status_terverifikasi"]:
             status_terverifikasi = True if args["status_terverifikasi"] == "sudah" else False
             filter_pengguna = filter_pengguna.filter_by(terverifikasi=status_terverifikasi)
         # filter nama lengkap dan email berdasarkan kata kunci
-        if args["kata_kunci"] is not None:
+        if args["kata_kunci"]:
             filter_pengguna = filter_pengguna.filter(or_(
                 (Pengguna.nama_depan+" "+Pengguna.nama_belakang).like("%"+args["kata_kunci"]+"%"),
                 Pengguna.email.like("%"+args["kata_kunci"]+"%")
             ))
         # mengurutkan berdasarkan nama
-        if args["urutkan_nama"] is not None:
+        if args["urutkan_nama"]:
             if args["urutkan_nama"] == "nama_naik":
                 filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.asc())
             elif args["urutkan_nama"] == "nama_turun":
                 filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.desc())
         # mengurutkan berdasarkan diperbarui
-        if args["urutkan_diperbarui"] is not None:
+        if args["urutkan_diperbarui"]:
             if args["urutkan_diperbarui"] == "diperbarui_naik":
                 filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.asc())
             elif args["urutkan_diperbarui"] == "diperbarui_turun":
                 filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.desc())
         # mengurutkan berdasarkan dibuat
-        if args["urutkan_dibuat"] is not None:
+        if args["urutkan_dibuat"]:
             if args["urutkan_dibuat"] == "dibuat_naik":
                 filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.asc())
             elif args["urutkan_dibuat"] == "dibuat_turun":
@@ -230,17 +230,17 @@ class AdminKomentarKeluhan(Resource):
         parser.add_argument("id_komentar", location="args")
         parser.add_argument(
             "urutkan_laporan", location="args", default="laporan_turun",
-            choices=("laporan_naik", "laporan_turun"),
+            choices=("laporan_naik", "laporan_turun", ""),
             help="Masukan harus 'laporan_naik' atau 'laporan_turun'"
         )
         parser.add_argument(
             "urutkan_diperbarui", location="args",
-            choices=("diperbarui_naik", "diperbarui_turun"),
+            choices=("diperbarui_naik", "diperbarui_turun", ""),
             help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
         )
         parser.add_argument(
             "urutkan_dibuat", location="args",
-            choices=("dibuat_naik", "dibuat_turun"),
+            choices=("dibuat_naik", "dibuat_turun", ""),
             help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
         )
         parser.add_argument("halaman", type=int, location="args", default=1)
@@ -250,22 +250,22 @@ class AdminKomentarKeluhan(Resource):
         # filter berdasarkan kota
         filter_komentar = KomentarKeluhan.query.filter_by(kota=klaim_admin["kota"])
         # filter berdasarkan id komentar
-        if args["id_komentar"] is not None:
+        if args["id_komentar"]:
             filter_komentar = filter_komentar.filter(KomentarKeluhan.id.like(args["id_komentar"]+"%"))
         # mengurutkan berdasarkan total laporan
-        if args["urutkan_laporan"] is not None:
+        if args["urutkan_laporan"]:
             if args["urutkan_laporan"] == "laporan_naik":
                 filter_komentar = filter_komentar.order_by(KomentarKeluhan.total_dilaporkan.asc())
             elif args["urutkan_laporan"] == "laporan_turun":
                 filter_komentar = filter_komentar.order_by(KomentarKeluhan.total_dilaporkan.desc())
         # mengurutkan berdasarkan diperbarui
-        if args["urutkan_diperbarui"] is not None:
+        if args["urutkan_diperbarui"]:
             if args["urutkan_diperbarui"] == "diperbarui_naik":
                 filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.asc())
             elif args["urutkan_diperbarui"] == "diperbarui_turun":
                 filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.desc())
         # mengurutkan berdasarkan dibuat
-        if args["urutkan_dibuat"] is not None:
+        if args["urutkan_dibuat"]:
             if args["urutkan_dibuat"] == "dibuat_naik":
                 filter_komentar = filter_komentar.order_by(KomentarKeluhan.dibuat.asc())
             elif args["urutkan_dibuat"] == "dibuat_turun":

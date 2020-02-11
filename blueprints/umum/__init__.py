@@ -109,27 +109,27 @@ class UmumKeluhan(Resource):
             parser.add_argument("kota", location="args", required=True)
             parser.add_argument(
                 "status", location="args",
-                choices=("diterima", "diproses", "selesai"),
+                choices=("diterima", "diproses", "selesai", ""),
                 help=("Masukan harus 'diterima', 'diproses' atau 'selesai'")
             )
             parser.add_argument(
                 "kepuasan", location="args",
-                choices=("puas", "tidak_puas", "belum"),
+                choices=("puas", "tidak_puas", "belum", ""),
                 help=("Masukan harus 'puas', 'tidak_puas' atau 'belum'")
             )
             parser.add_argument(
                 "urutkan_dukungan", location="args",
-                choices=("dukungan_naik", "dukungan_turun"),
+                choices=("dukungan_naik", "dukungan_turun", ""),
                 help="Masukan harus 'dukungan_naik' atau 'dukungan_turun'"
             )
             parser.add_argument(
                 "urutkan_diperbarui", location="args",
-                choices=("diperbarui_naik", "diperbarui_turun"),
+                choices=("diperbarui_naik", "diperbarui_turun", ""),
                 help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
             )
             parser.add_argument(
                 "urutkan_dibuat", location="args", default="dibuat_turun",
-                choices=("dibuat_naik", "dibuat_turun"),
+                choices=("dibuat_naik", "dibuat_turun", ""),
                 help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
             )
             parser.add_argument("halaman", type=int, location="args", default=1)
@@ -139,13 +139,13 @@ class UmumKeluhan(Resource):
             # filter berdasarkan kota
             filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
             # filter id berdasarkan id_keluhan
-            if args["id_keluhan"] is not None:
+            if args["id_keluhan"]:
                 filter_keluhan = filter_keluhan.filter(Keluhan.id.like(args["id_keluhan"]+"%"))
             # filter berdasarkan status keluhan
-            if args["status"] is not None:
+            if args["status"]:
                 filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
             # mengurutkan berdasarkan tingkat kepuasan
-            if args["kepuasan"] is not None:
+            if args["kepuasan"]:
                 if args["kepuasan"] == "puas":
                     filter_keluhan = filter_keluhan.filter_by(kepuasan=True)
                 elif args["kepuasan"] == "tidak_puas":
@@ -153,19 +153,19 @@ class UmumKeluhan(Resource):
                 elif args["kepuasan"] == "belum":
                     filter_keluhan = filter_keluhan.filter_by(kepuasan=None)
             # mengurutkan berdasarkan jumlah dukungan
-            if args["urutkan_dukungan"] is not None:
+            if args["urutkan_dukungan"]:
                 if args["urutkan_dukungan"] == "dukungan_naik":
                     filter_keluhan = filter_keluhan.order_by(Keluhan.total_dukungan.asc())
                 elif args["urutkan_dukungan"] == "dukungan_turun":
                     filter_keluhan = filter_keluhan.order_by(Keluhan.total_dukungan.desc())
             # mengurutkan berdasarkan diperbarui
-            if args["urutkan_diperbarui"] is not None:
+            if args["urutkan_diperbarui"]:
                 if args["urutkan_diperbarui"] == "diperbarui_naik":
                     filter_keluhan = filter_keluhan.order_by(Keluhan.diperbarui.asc())
                 elif args["urutkan_diperbarui"] == "diperbarui_turun":
                     filter_keluhan = filter_keluhan.order_by(Keluhan.diperbarui.desc())
             # mengurutkan berdasarkan dibuat
-            if args["urutkan_dibuat"] is not None:
+            if args["urutkan_dibuat"]:
                 if args["urutkan_dibuat"] == "dibuat_naik":
                     filter_keluhan = filter_keluhan.order_by(Keluhan.dibuat.asc())
                 elif args["urutkan_dibuat"] == "dibuat_turun":
