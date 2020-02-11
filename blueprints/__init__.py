@@ -67,8 +67,16 @@ def harus_pengguna(fn):
         verify_jwt_in_request()
         klaim_pengguna = get_jwt_claims()
         if klaim_pengguna["peran"] != "pengguna":
-            print(klaim_pengguna["peran"])
             return {"status": "DILARANG", "pesan": "Hanya pengguna yang diperkenankan untuk akses."}, 403
+        # memeriksa apakah status pengguna aktif atau tidak
+        cari_pengguna = db.session.execute("SELECT * FROM pengguna WHERE id = :id", {"id": klaim_pengguna["id"]})
+        for pengguna in cari_pengguna:
+            status_aktif = pengguna["aktif"]
+        if not status_aktif:
+            return {
+                "status": "GAGAL_MASUK",
+                "pesan": "Akun anda telah dinonaktifkan. Silahkan hubungi Admin untuk informasi lebih lanjut."
+            }, 401, {"Content-Type": "application/json"}
         return fn(*args, **kwargs)
     return wrapper
 

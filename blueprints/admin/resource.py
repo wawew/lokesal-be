@@ -58,15 +58,13 @@ class AdminKeluhan(Resource):
             if cari_keluhan is not None and klaim_admin["kota"] == cari_keluhan.kota:
                 if cari_keluhan.status != "selesai" and args["isi"]:
                     if cari_keluhan.status == "diterima": cari_keluhan.status = "diproses"
-                    # foto sesudah hanya ditambahkan jika status--
-                    # --berubah dari diproses menjadi selesai
+                    # foto sesudah hanya ditambahkan jika status berubah dari diproses menjadi selesai
                     elif cari_keluhan.status == "diproses":
                         cari_keluhan.status = "selesai"
                         cari_keluhan.foto_sesudah = args["foto_sesudah"]
                     tanggapan = Tanggapan(klaim_admin["id"], id, args["isi"])
                     db.session.add(tanggapan)
                     cari_keluhan.diperbarui = datetime.now()
-                    db.session.add(cari_keluhan)
                     db.session.commit()
                 detail_keluhan = marshal(cari_keluhan, Keluhan.respons)
                 id_pengguna = cari_keluhan.id_pengguna
@@ -189,7 +187,6 @@ class AdminPengguna(Resource):
             if cari_pengguna.kota == klaim_admin["kota"]:
                 cari_pengguna.aktif = False if cari_pengguna.aktif else True
                 cari_pengguna.diperbarui = datetime.now()
-                db.session.add(cari_pengguna)
                 db.session.commit()
                 return marshal(cari_pengguna, Pengguna.respons), 200, {
                     "Content-Type": "application/json"
@@ -210,7 +207,6 @@ class AdminPengguna(Resource):
                 if not cari_pengguna.terverifikasi:
                     cari_pengguna.diperbarui = datetime.now()
                     cari_pengguna.terverifikasi = True
-                    db.session.add(cari_pengguna)
                     db.session.commit()
                 return marshal(cari_pengguna, Pengguna.respons), 200, {
                     "Content-Type": "application/json"
