@@ -13,10 +13,10 @@ api = Api(blueprint_pengguna)
 
 
 class PenggunaKeluhan(Resource):
+    # melihat riwayat keluhan
     @jwt_required
     @harus_pengguna
-    def get(self):
-        daftar_keluhan = []
+    def get(self, id=None):
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument("halaman", type=int, location="args", default=1)
@@ -38,14 +38,16 @@ class PenggunaKeluhan(Resource):
             "total_keluhan": total_keluhan, "halaman":args["halaman"],
             "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
         }
+        daftar_keluhan = []
         for setiap_keluhan in keluhan_pengguna.all():
             daftar_keluhan.append(marshal(setiap_keluhan, Keluhan.respons))
         respons_keluhan["daftar_keluhan"] = daftar_keluhan
         return respons_keluhan, 200, {"Content-Type": "application/json"}
 
+    # membuat keluhan baru
     @jwt_required
     @harus_pengguna
-    def post(self):
+    def post(self, id=None):
         klaim_pengguna = get_jwt_claims()
         parser = reqparse.RequestParser()
         parser.add_argument("foto_sebelum", location="json", required=True)
@@ -69,8 +71,40 @@ class PenggunaKeluhan(Resource):
             "status": "GAGAL",
             "pesan": "Anda harus terverifikasi untuk dapat membuat keluhan."
         }, 400, {"Content-Type": "application/json"}
-        
-    def options(self):
+
+    # memberi ulasan puas atau tidak terhadap keluhan yang sudah selesai
+    @jwt_required
+    @harus_pengguna
+    def put(self, id=None):
+        klaim_pengguna = get_jwt_claims()
+        if id is not None:
+            parser = reqparse.RequestParser()
+            parser.add_argument(
+                "kepuasan", location="json", choices=("puas", "tidak_puas"),
+                help="Masukan harus 'puas' atau 'tidak_puas'", required=True
+            )
+            args = parser.parse_args()
+            cari_keluhan = Keluhan.query.get(id)
+            if cari_keluhan is not None:
+                if cari_keluhan.id_pengguna == klaim_pengguna["id"]:
+                    if cari_keluhan.kepuasan is None:
+                        cari_keluhan.kepuasan = True if args["kepuasan"] == "puas" else False
+                        db.session.commit()
+                        return marshal(cari_keluhan, Keluhan.respons), 200, {"Content-Type": "application/json"}
+                    return {
+                        "status": "GAGAL",
+                        "pesan": "Anda telah memberi ulasan pada keluhan ini."
+                    }, 400, {"Content-Type": "application/json"}
+                return {
+                    "status": "DILARANG",
+                    "pesan": "Hanya pengguna yang membuat keluhan ini yang berhak memberi ulasan."
+                }, 403, {"Content-Type": "application/json"}
+        return {
+            "status": "TIDAK_KETEMU",
+            "pesan": "Keluhan tidak ditemukan."
+        }, 404, {"Content-Type": "application/json"}
+
+    def options(self, id=None):
         return 200
 
 
@@ -87,11 +121,15 @@ class PenggunaKomentarKeluhan(Resource):
 
             cari_keluhan = Keluhan.query.get(id_keluhan)
             if cari_keluhan is not None and klaim_pengguna["kota"] == cari_keluhan.kota:
+                if not args["isi"]:
+                    return {
+                        "status": "GAGAL",
+                        "pesan": "Komentar tidak boleh kosong."
+                    }, 400, {"Content-Type": "application/json"}
                 komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
                 total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                 cari_keluhan.total_komentar = total_komentar
-                db.session.add(cari_keluhan)
                 db.session.commit()
                 # membentuk detail komentar
                 data_pengguna = Pengguna.query.get(klaim_pengguna["id"])
@@ -133,6 +171,7 @@ class PenggunaKomentarKeluhan(Resource):
 
 
 class PenggunaDukungKeluhan(Resource):
+    # melihat status apakah pengguna sudah mendukung keluhan atau belum
     @jwt_required
     @harus_pengguna
     def get(self, id_keluhan=None):
@@ -160,6 +199,7 @@ class PenggunaDukungKeluhan(Resource):
             "pesan": "Keluhan tidak ditemukan."
         }, 404, {"Content-Type": "application/json"}
 
+    # melakukan atau membatalkan dukungan terhadap suatu keluhan
     @jwt_required
     @harus_pengguna
     def put(self, id_keluhan=None):
@@ -212,6 +252,7 @@ class PenggunaProfil(Resource):
         special=1
     )
 
+    # menampilkan detail profil pengguna
     @jwt_required
     @harus_pengguna
     def get(self):
@@ -333,7 +374,6 @@ class PenggunaProfil(Resource):
             cari_pengguna.nama_belakang = args["nama_belakang"]
             cari_pengguna.diperbarui = datetime.now()
         
-        db.session.add(cari_pengguna)
         db.session.commit()
         return marshal(cari_pengguna, Pengguna.respons), 200, {"Content-Type": "application/json"} 
 
@@ -341,7 +381,7 @@ class PenggunaProfil(Resource):
         return 200
 
 
-api.add_resource(PenggunaKeluhan, "/keluhan")
+api.add_resource(PenggunaKeluhan, "/keluhan", "/keluhan/<int:id>")
 api.add_resource(PenggunaKomentarKeluhan, "/keluhan/<int:id_keluhan>/komentar", "/keluhan/komentar/<int:id_komentar>")
 api.add_resource(PenggunaDukungKeluhan, "/keluhan/<int:id_keluhan>/dukungan")
 api.add_resource(PenggunaProfil, "/profil")
