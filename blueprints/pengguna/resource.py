@@ -148,14 +148,13 @@ class PenggunaKomentarKeluhan(Resource):
                 komentar_keluhan = KomentarKeluhan(klaim_pengguna["id"], id_keluhan, klaim_pengguna["kota"], args["isi"])
                 db.session.add(komentar_keluhan)
                 db.session.commit()
-                total_komentar = len(KomentarKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                 # membentuk detail komentar
                 data_pengguna = Pengguna.query.get(klaim_pengguna["id"])
                 respons_komentar_keluhan = {
                     "avatar": data_pengguna.avatar,
                     "nama_depan": data_pengguna.nama_depan,
                     "nama_belakang": data_pengguna.nama_belakang,
-                    "total_komentar": total_komentar,
+                    "total_komentar": len(cari_keluhan.komentar_keluhan),
                     "detail_komentar": marshal(komentar_keluhan, KomentarKeluhan.respons)
                 }
                 return respons_komentar_keluhan, 200, {"Content-Type": "application/json"}
@@ -234,22 +233,19 @@ class PenggunaDukungKeluhan(Resource):
                     dukung_keluhan = DukungKeluhan(klaim_pengguna["id"], id_keluhan)
                     db.session.add(dukung_keluhan)
                     db.session.commit()
-                    total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
                     return {
                         "status": "BERHASIL",
                         "pesan": "Dukungan berhasil ditambahkan.",
-                        "total_dukungan": total_dukungan,
+                        "total_dukungan": len(cari_keluhan.dukung_keluhan),
                         "dukung": True
                     }, 200, {"Content-Type": "application/json"}
                 # hapus dukungan jika sebelumnya belum mendukung
                 db.session.delete(filter_dukungan.first())
-                total_dukungan = len(DukungKeluhan.query.filter_by(id_keluhan=id_keluhan).all())
-                cari_keluhan.total_dukungan = total_dukungan
                 db.session.commit()
                 return {
                     "status": "BERHASIL",
                     "pesan": "Dukungan berhasil dihapus.",
-                    "total_dukungan": total_dukungan,
+                    "total_dukungan": len(cari_keluhan.dukung_keluhan),
                     "dukung": False
                 }, 200, {"Content-Type": "application/json"}
         return {
@@ -294,6 +290,7 @@ class PenggunaProfil(Resource):
 
         klaim_pengguna = get_jwt_claims()
         cari_pengguna = Pengguna.query.get(klaim_pengguna["id"])
+        filter_kota = Pengguna.query.filter_by(kota=klaim_pengguna["kota"])
 
         # pengecekan ketika pengguna mengganti kata sandi
         if args["kata_sandi_lama"] is not None:
@@ -336,7 +333,6 @@ class PenggunaProfil(Resource):
                     "status": "GAGAL",
                     "pesan": "Email baru harus berbeda dengan email lama."
                 }, 400, {"Content-Type": "application/json"}
-            filter_kota = Pengguna.query.filter_by(kota=klaim_pengguna["kota"])
             filter_email = filter_kota.filter_by(email=args["email_baru"])
             if filter_email.all() != []:
                 return {
@@ -363,7 +359,6 @@ class PenggunaProfil(Resource):
                     "status": "GAGAL",
                     "pesan": "Nomor telepon baru harus berbeda dengan nomor telepon lama."
                 }, 400, {"Content-Type": "application/json"}
-            filter_kota = Pengguna.query.filter_by(kota=klaim_pengguna["kota"])
             filter_telepon = filter_kota.filter_by(telepon=args["telepon_baru"])
             if filter_telepon.all() != []:
                 return {

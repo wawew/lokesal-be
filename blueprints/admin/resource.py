@@ -67,14 +67,11 @@ class AdminKeluhan(Resource):
                     cari_keluhan.diperbarui = datetime.now()
                     db.session.commit()
                 detail_keluhan = marshal(cari_keluhan, Keluhan.respons)
-                id_pengguna = cari_keluhan.id_pengguna
-                data_pengguna = Pengguna.query.get(id_pengguna)
-                detail_keluhan["nama_depan"] = data_pengguna.nama_depan
-                detail_keluhan["nama_belakang"] = data_pengguna.nama_belakang
+                detail_keluhan["nama_depan"] = cari_keluhan.pengguna.nama_depan
+                detail_keluhan["nama_belakang"] = cari_keluhan.pengguna.nama_belakang
                 # mendapatkan semua tanggapan pada keluhan yang dipilih
-                filter_tanggapan = Tanggapan.query.filter_by(id_keluhan=id)
                 tanggapan_admin = []
-                for setiap_tanggapan in filter_tanggapan.all():
+                for setiap_tanggapan in cari_keluhan.tanggapan:
                     tanggapan_admin.append(marshal(setiap_tanggapan, Tanggapan.respons))
                 detail_keluhan["tanggapan_admin"] = tanggapan_admin
                 return detail_keluhan, 200, {"Content-Type": "application/json"}
@@ -281,16 +278,13 @@ class AdminKomentarKeluhan(Resource):
             "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
         }
         daftar_komentar = []
+        # mengambil detail komentar
         for setiap_komentar in filter_komentar.all():
-            # mengambil nama pengguna dan email pada setiap komentar
-            id_pengguna = setiap_komentar.id_pengguna
-            data_pengguna = Pengguna.query.get(id_pengguna)
-            # mengambil detail komentar
             data_komentar = {
-                "avatar": data_pengguna.avatar,
-                "email": data_pengguna.email,
-                "nama_depan": data_pengguna.nama_depan,
-                "nama_belakang": data_pengguna.nama_belakang,
+                "avatar": setiap_komentar.pengguna.avatar,
+                "email": setiap_komentar.pengguna.email,
+                "nama_depan": setiap_komentar.pengguna.nama_depan,
+                "nama_belakang": setiap_komentar.pengguna.nama_belakang,
                 "detail_komentar": marshal(setiap_komentar, KomentarKeluhan.respons)
             }
             daftar_komentar.append(data_komentar)
