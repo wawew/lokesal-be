@@ -131,11 +131,14 @@ class UmumKeluhan(Resource):
             parser.add_argument("per_halaman", type=int, location="args", default=10)
             args = parser.parse_args()
             
-            # data = db.session.query(Pengguna, Keluhan).join(Keluhan).filter(Keluhan.kota==args["kota"]).all()
+            data = db.session.query(Pengguna, Keluhan, DukungKeluhan).join(Keluhan).join(DukungKeluhan)
+            data = data.filter(Pengguna.nama_depan.like("%"+"ch"+"%")).all()
+            # data = db.session.query(Keluhan, Pengguna).join(Pengguna).filter_by(kota=args["kota"]).all()
             # data = db.session.query(Pengguna, Keluhan).join(Keluhan).filter_by(kepuasan=True).all()
-            # [data_pengguna, data_keluhan] = data[0]
-            # print(len(data))
-            # print(data_pengguna.id, data_pengguna.email, data_keluhan.id_pengguna, data_keluhan.isi)
+            # [data_pengguna, data_keluhan] = data[-1]
+            [data_keluhan, data_pengguna] = data[-1]
+            print(len(data))
+            print(data_pengguna.id, data_pengguna.email, data_keluhan.id_pengguna, data_keluhan.isi)
             # print(marshal(data_keluhan, Keluhan.respons))
             # filter berdasarkan kota
             filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
