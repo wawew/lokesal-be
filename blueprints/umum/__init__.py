@@ -215,8 +215,8 @@ class UmumKeluhan(Resource):
             tanggapan_admin = []
             for setiap_tanggapan in cari_keluhan.tanggapan:
                 tanggapan_admin.append(marshal(setiap_tanggapan, Tanggapan.respons))
-            detail_keluhan["total_dukungan"] = len(DukungKeluhan.query.filter_by(id_keluhan=id).all())
-            detail_keluhan["total_komentar"] = len(KomentarKeluhan.query.filter_by(id_keluhan=id).all())
+            detail_keluhan["total_dukungan"] = len(cari_keluhan.dukung_keluhan)
+            detail_keluhan["total_komentar"] = len(cari_keluhan.komentar_keluhan)
             detail_keluhan["tanggapan_admin"] = tanggapan_admin
             return detail_keluhan, 200, {"Content-Type": "application/json"}
 
