@@ -106,19 +106,14 @@ class AdminPengguna(Resource):
             help=("Masukan harus 'sudah' atau 'belum'")
         )
         parser.add_argument(
-            "urutkan_nama", location="args",
-            choices=("nama_naik", "nama_turun", ""),
-            help="Masukan harus 'nama_naik' atau 'nama_turun'"
+            "urutkan", location="args", default="dibuat",
+            choices=("nama", "dibuat", "diperbarui", ""),
+            help="Masukan harus 'nama', 'dibuat', atau 'diperbarui'"
         )
         parser.add_argument(
-            "urutkan_diperbarui", location="args", default="diperbarui_turun",
-            choices=("diperbarui_naik", "diperbarui_turun", ""),
-            help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
-        )
-        parser.add_argument(
-            "urutkan_dibuat", location="args",
-            choices=("dibuat_naik", "dibuat_turun", ""),
-            help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
+            "sortir", location="args", default="turun",
+            choices=("naik", "turun", ""),
+            help="Masukan harus 'naik' atau 'turun'"
         )
         parser.add_argument("halaman", type=int, location="args", default=1)
         parser.add_argument("per_halaman", type=int, location="args", default=10)
@@ -140,24 +135,25 @@ class AdminPengguna(Resource):
                 (Pengguna.nama_depan+" "+Pengguna.nama_belakang).like("%"+args["kata_kunci"]+"%"),
                 Pengguna.email.like("%"+args["kata_kunci"]+"%")
             ))
-        # mengurutkan berdasarkan nama
-        if args["urutkan_nama"]:
-            if args["urutkan_nama"] == "nama_naik":
-                filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.asc())
-            elif args["urutkan_nama"] == "nama_turun":
-                filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.desc())
-        # mengurutkan berdasarkan diperbarui
-        if args["urutkan_diperbarui"]:
-            if args["urutkan_diperbarui"] == "diperbarui_naik":
-                filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.asc())
-            elif args["urutkan_diperbarui"] == "diperbarui_turun":
-                filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.desc())
-        # mengurutkan berdasarkan dibuat
-        if args["urutkan_dibuat"]:
-            if args["urutkan_dibuat"] == "dibuat_naik":
-                filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.asc())
-            elif args["urutkan_dibuat"] == "dibuat_turun":
-                filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.desc())
+        if args["urutkan"] is not None:
+            # mengurutkan berdasarkan nama
+            if args["urutkan"] == "nama":
+                if args["sortir"] == "" or args["sortir"] == "turun":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.desc())
+                elif args["sortir"] == "naik":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.nama_depan.asc())
+            # mengurutkan berdasarkan dibuat
+            elif args["urutkan"] == "dibuat" or args["urutkan"] == "":
+                if args["sortir"] == "" or args["sortir"] == "turun":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.desc())
+                elif args["sortir"] == "naik":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.dibuat.asc())
+            # mengurutkan berdasarkan diperbarui
+            elif args["urutkan"] == "diperbarui":
+                if args["sortir"] == "" or args["sortir"] == "turun":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.desc())
+                elif args["sortir"] == "naik":
+                    filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.asc())
         # limit pengguna sesuai jumlah per halaman
         total_pengguna = len(filter_pengguna.all())
         offset = (args["halaman"] - 1)*args["per_halaman"]
