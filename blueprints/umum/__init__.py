@@ -127,21 +127,6 @@ class UmumKeluhan(Resource):
                 choices=("naik", "turun", "diperbarui", ""),
                 help="Masukan harus 'naik' atau 'turun'"
             )
-            # parser.add_argument(
-            #     "urutkan_dukungan", location="args",
-            #     choices=("dukungan_naik", "dukungan_turun", ""),
-            #     help="Masukan harus 'dukungan_naik' atau 'dukungan_turun'"
-            # )
-            # parser.add_argument(
-            #     "urutkan_diperbarui", location="args",
-            #     choices=("diperbarui_naik", "diperbarui_turun", ""),
-            #     help="Masukan harus 'diperbarui_naik' atau 'diperbarui_turun'"
-            # )
-            # parser.add_argument(
-            #     "urutkan_dibuat", location="args", default="dibuat_turun",
-            #     choices=("dibuat_naik", "dibuat_turun", ""),
-            #     help="Masukan harus 'dibuat_naik' atau 'dibuat_turun'"
-            # )
             parser.add_argument("halaman", type=int, location="args", default=1)
             parser.add_argument("per_halaman", type=int, location="args", default=10)
             args = parser.parse_args()
@@ -154,7 +139,6 @@ class UmumKeluhan(Resource):
             # print(marshal(data_keluhan, Keluhan.respons))
             # filter berdasarkan kota
             filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
-            # filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
             # filter id berdasarkan id_keluhan
             if args["id_keluhan"]:
                 filter_keluhan = filter_keluhan.filter(Keluhan.id.like(args["id_keluhan"]+"%"))
