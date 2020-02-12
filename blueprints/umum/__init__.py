@@ -152,11 +152,11 @@ class UmumKeluhan(Resource):
             # mengurutkan berdasarkan tingkat kepuasan
             if args["kepuasan"]:
                 if args["kepuasan"] == "puas":
-                    filter_keluhan = filter_keluhan.filter_by(kepuasan=True)
+                    filter_keluhan = filter_keluhan.filter(Keluhan.kepuasan==True)
                 elif args["kepuasan"] == "tidak_puas":
-                    filter_keluhan = filter_keluhan.filter_by(kepuasan=False)
+                    filter_keluhan = filter_keluhan.filter(Keluhan.kepuasan==False)
                 elif args["kepuasan"] == "belum":
-                    filter_keluhan = filter_keluhan.filter_by(kepuasan=None)
+                    filter_keluhan = filter_keluhan.filter(Keluhan.kepuasan==None)
             if args["urutkan"] is not None:
                 # mengurutkan berdasarkan jumlah dukungan
                 if args["urutkan"] == "dukungan":
