@@ -1,4 +1,4 @@
-from sqlalchemy import func, or_
+from sqlalchemy import func, or_, desc, asc
 from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import create_access_token
@@ -134,10 +134,11 @@ class UmumKeluhan(Resource):
             filter_keluhan = db.session.query(
                 Pengguna.nama_depan,
                 Pengguna.nama_belakang,
-                func.count(DukungKeluhan.id),
+                func.count(DukungKeluhan.id).label("total_dukungan"),
                 Keluhan
             ).join(Pengguna, Pengguna.id==Keluhan.id_pengguna)\
             .outerjoin(DukungKeluhan, DukungKeluhan.id_keluhan==Keluhan.id).group_by(Keluhan.id)
+            print(dir(filter_keluhan))
             # filter berdasarkan kota
             filter_keluhan = filter_keluhan.filter(Keluhan.kota==args["kota"])
             # filter id berdasarkan id_keluhan
@@ -161,9 +162,9 @@ class UmumKeluhan(Resource):
                 # mengurutkan berdasarkan jumlah dukungan
                 if args["urutkan"] == "dukungan":
                     if args["sortir"] == "" or args["sortir"] == "turun":
-                        filter_keluhan = filter_keluhan.order_by(Keluhan.total_dukungan.desc())
+                        filter_keluhan = filter_keluhan.order_by(desc("total_dukungan"))
                     elif args["sortir"] == "naik":
-                        filter_keluhan = filter_keluhan.order_by(Keluhan.total_dukungan.asc())
+                        filter_keluhan = filter_keluhan.order_by(asc("total_dukungan"))
                 # mengurutkan berdasarkan dibuat
                 elif args["urutkan"] == "dibuat" or args["urutkan"] == "":
                     if args["sortir"] == "" or args["sortir"] == "turun":
