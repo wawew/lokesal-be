@@ -1,3 +1,4 @@
+from sqlalchemy import func, or_
 from flask import Blueprint
 from flask_restful import Api, Resource, reqparse, marshal
 from flask_jwt_extended import create_access_token
@@ -103,9 +104,8 @@ class UmumKeluhan(Resource):
     # menampilkan semua keluhan pengguna
     def get(self, id=None):
         if id is None:
-            daftar_keluhan = []
             parser = reqparse.RequestParser()
-            parser.add_argument("id_keluhan", location="args")
+            parser.add_argument("kata_kunci", location="args")
             parser.add_argument("kota", location="args", required=True)
             parser.add_argument(
                 "status", location="args",
@@ -131,28 +131,32 @@ class UmumKeluhan(Resource):
             parser.add_argument("per_halaman", type=int, location="args", default=10)
             args = parser.parse_args()
             
-            # data = db.session.query(Pengguna, Keluhan).join(Keluhan).filter(Keluhan.kota==args["kota"]).all()
-            # data = db.session.query(Pengguna, Keluhan).join(Keluhan).filter_by(kepuasan=True).all()
-            # [data_pengguna, data_keluhan] = data[0]
-            # print(len(data))
-            # print(data_pengguna.id, data_pengguna.email, data_keluhan.id_pengguna, data_keluhan.isi)
-            # print(marshal(data_keluhan, Keluhan.respons))
+            filter_keluhan = db.session.query(
+                Pengguna.nama_depan,
+                Pengguna.nama_belakang,
+                func.count(DukungKeluhan.id),
+                Keluhan
+            ).join(Pengguna, Pengguna.id==Keluhan.id_pengguna)\
+            .outerjoin(DukungKeluhan, DukungKeluhan.id_keluhan==Keluhan.id).group_by(Keluhan.id)
             # filter berdasarkan kota
-            filter_keluhan = Keluhan.query.filter_by(kota=args["kota"])
+            filter_keluhan = filter_keluhan.filter(Keluhan.kota==args["kota"])
             # filter id berdasarkan id_keluhan
-            if args["id_keluhan"]:
-                filter_keluhan = filter_keluhan.filter(Keluhan.id.like(args["id_keluhan"]+"%"))
+            if args["kata_kunci"]:
+                filter_keluhan = filter_keluhan.filter(or_(
+                    (Pengguna.nama_depan+" "+Pengguna.nama_belakang).like("%"+args["kata_kunci"]+"%"),
+                    Keluhan.id.like(args["kata_kunci"]+"%")
+                ))
             # filter berdasarkan status keluhan
             if args["status"]:
                 filter_keluhan = filter_keluhan.filter(Keluhan.status.like("%"+args["status"]+"%"))
             # mengurutkan berdasarkan tingkat kepuasan
             if args["kepuasan"]:
                 if args["kepuasan"] == "puas":
-                    filter_keluhan = filter_keluhan.filter_by(kepuasan=True)
+                    filter_keluhan = filter_keluhan.filter(Keluhan.kepuasan==True)
                 elif args["kepuasan"] == "tidak_puas":
-                    filter_keluhan = filter_keluhan.filter_by(kepuasan=False)
+                    filter_keluhan = filter_keluhan.filter(Keluhan.kepuasan==False)
                 elif args["kepuasan"] == "belum":
-                    filter_keluhan = filter_keluhan.filter_by(kepuasan=None)
+                    filter_keluhan = filter_keluhan.filter(Keluhan.kepuasan==None)
             if args["urutkan"] is not None:
                 # mengurutkan berdasarkan jumlah dukungan
                 if args["urutkan"] == "dukungan":
@@ -185,15 +189,14 @@ class UmumKeluhan(Resource):
                 "total_keluhan": total_keluhan, "halaman":args["halaman"],
                 "total_halaman":total_halaman, "per_halaman":args["per_halaman"]
             }
+            daftar_keluhan = []
             for setiap_keluhan in filter_keluhan.all():
-                data_keluhan = {}
-                # mengambil nama pengguna pada setiap keluhan
-                id_pengguna = setiap_keluhan.id_pengguna
-                data_pengguna = Pengguna.query.get(id_pengguna)
-                data_keluhan["nama_depan"] = data_pengguna.nama_depan
-                data_keluhan["nama_belakang"] = data_pengguna.nama_belakang
-                # mengambil detail keluhan
-                data_keluhan["detail_keluhan"] = marshal(setiap_keluhan, Keluhan.respons)
+                data_keluhan = {
+                    "nama_depan": setiap_keluhan[0],
+                    "nama_belakang": setiap_keluhan[1],
+                    "total_dukungan": setiap_keluhan[2],
+                    "detail_keluhan": marshal(setiap_keluhan[3], Keluhan.respons)
+                }
                 daftar_keluhan.append(data_keluhan)
             respons_keluhan["daftar_keluhan"] = daftar_keluhan
             return respons_keluhan, 200, {"Content-Type": "application/json"}
@@ -205,17 +208,15 @@ class UmumKeluhan(Resource):
                     "pesan": "Keluhan tidak ditemukan."
                 }, 404, {"Content-Type": "application/json"}
             detail_keluhan = marshal(cari_keluhan, Keluhan.respons)
-            id_pengguna = cari_keluhan.id_pengguna
-            data_pengguna = Pengguna.query.get(id_pengguna)
-            detail_keluhan["nama_depan"] = data_pengguna.nama_depan
-            detail_keluhan["nama_belakang"] = data_pengguna.nama_belakang
-            # mendapatkan semua tanggapan pada keluhan yang dipilih
-            filter_tanggapan = Tanggapan.query.filter_by(id_keluhan=id)
+            # mendapatkan nama pengguna pada keluhan yang dipilih
+            detail_keluhan["nama_depan"] = cari_keluhan.pengguna.nama_depan
+            detail_keluhan["nama_belakang"] = cari_keluhan.pengguna.nama_belakang
+            # mendapatkan semua tanggapan admin pada keluhan yang dipilih
             tanggapan_admin = []
-            for setiap_tanggapan in filter_tanggapan.all():
+            for setiap_tanggapan in cari_keluhan.tanggapan:
                 tanggapan_admin.append(marshal(setiap_tanggapan, Tanggapan.respons))
-            detail_keluhan["total_dukungan"] = len(DukungKeluhan.query.filter_by(id_keluhan=id).all())
-            detail_keluhan["total_komentar"] = len(KomentarKeluhan.query.filter_by(id_keluhan=id).all())
+            detail_keluhan["total_dukungan"] = len(cari_keluhan.dukung_keluhan)
+            detail_keluhan["total_komentar"] = len(cari_keluhan.komentar_keluhan)
             detail_keluhan["tanggapan_admin"] = tanggapan_admin
             return detail_keluhan, 200, {"Content-Type": "application/json"}
 
