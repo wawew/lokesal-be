@@ -14,6 +14,8 @@ class KomentarKeluhan(db.Model):
     total_dilaporkan = db.Column(db.Integer, nullable=False, default=0)
     dibuat = db.Column(db.DateTime, nullable=False)
     diperbarui = db.Column(db.DateTime, nullable=False)
+    pengguna = relationship("Pengguna", back_populates="komentar_keluhan")
+    keluhan = relationship("Keluhan", back_populates="komentar_keluhan")
 
     respons = {
         "dibuat": fields.DateTime(dt_format="iso8601"),
@@ -82,9 +84,9 @@ class Keluhan(db.Model):
     kepuasan = db.Column(db.Boolean)
     dibuat = db.Column(db.DateTime, nullable=False)
     diperbarui = db.Column(db.DateTime, nullable=False)
-    # pengguna = relationship("Pengguna", secondary=DukungKeluhan, back_populates="keluhan")
     pengguna = relationship("Pengguna", back_populates="keluhan")
     dukung_keluhan = relationship("DukungKeluhan", back_populates="keluhan")
+    komentar_keluhan = relationship("KomentarKeluhan", back_populates="keluhan")
 
     respons = {
         "dibuat": fields.DateTime(dt_format="iso8601"),
@@ -137,9 +139,9 @@ class Pengguna(db.Model):
     terverifikasi = db.Column(db.Boolean, nullable=False, default=False)
     dibuat = db.Column(db.DateTime, nullable=False)
     diperbarui = db.Column(db.DateTime, nullable=False)
-    # keluhan = relationship("Keluhan", secondary=DukungKeluhan, back_populates="pengguna")
     keluhan = relationship("Keluhan", back_populates="pengguna")
     dukung_keluhan = relationship("DukungKeluhan", back_populates="pengguna")
+    komentar_keluhan = relationship("KomentarKeluhan", back_populates="pengguna")
 
     respons = {
         "dibuat": fields.DateTime(dt_format="iso8601"),
