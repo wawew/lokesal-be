@@ -124,7 +124,7 @@ class UmumKeluhan(Resource):
             )
             parser.add_argument(
                 "sortir", location="args", default="turun",
-                choices=("naik", "turun", "diperbarui", ""),
+                choices=("naik", "turun", ""),
                 help="Masukan harus 'naik' atau 'turun'"
             )
             parser.add_argument("halaman", type=int, location="args", default=1)
