@@ -87,6 +87,7 @@ class Keluhan(db.Model):
     pengguna = relationship("Pengguna", back_populates="keluhan")
     dukung_keluhan = relationship("DukungKeluhan", back_populates="keluhan")
     komentar_keluhan = relationship("KomentarKeluhan", back_populates="keluhan")
+    tanggapan = relationship("Tanggapan", back_populates="keluhan")
 
     respons = {
         "dibuat": fields.DateTime(dt_format="iso8601"),

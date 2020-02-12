@@ -208,14 +208,12 @@ class UmumKeluhan(Resource):
                     "pesan": "Keluhan tidak ditemukan."
                 }, 404, {"Content-Type": "application/json"}
             detail_keluhan = marshal(cari_keluhan, Keluhan.respons)
-            id_pengguna = cari_keluhan.id_pengguna
-            data_pengguna = Pengguna.query.get(id_pengguna)
-            detail_keluhan["nama_depan"] = data_pengguna.nama_depan
-            detail_keluhan["nama_belakang"] = data_pengguna.nama_belakang
-            # mendapatkan semua tanggapan pada keluhan yang dipilih
-            filter_tanggapan = Tanggapan.query.filter_by(id_keluhan=id)
+            # mendapatkan nama pengguna pada keluhan yang dipilih
+            detail_keluhan["nama_depan"] = cari_keluhan.pengguna.nama_depan
+            detail_keluhan["nama_belakang"] = cari_keluhan.pengguna.nama_belakang
+            # mendapatkan semua tanggapan admin pada keluhan yang dipilih
             tanggapan_admin = []
-            for setiap_tanggapan in filter_tanggapan.all():
+            for setiap_tanggapan in cari_keluhan.tanggapan:
                 tanggapan_admin.append(marshal(setiap_tanggapan, Tanggapan.respons))
             detail_keluhan["total_dukungan"] = len(DukungKeluhan.query.filter_by(id_keluhan=id).all())
             detail_keluhan["total_komentar"] = len(KomentarKeluhan.query.filter_by(id_keluhan=id).all())
