@@ -34,4 +34,4 @@ after_script:
 - docker tag ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} ${DOCKERHUB_USER}/${DOCKER_IMAGE_NAME}:be-latest
 - docker push ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-latest
 - ssh-keyscan -H $SSH_IP >> ~/.ssh/known_hosts
-- ssh -v -i deploy_rsa $SSH_USER@$SSH_IP DIR=$ROOT_DIR  'bash -s' < deploy.sh
+- ssh -v -i deploy_rsa $SSH_USER@$SSH_IP DIR=$ROOT_DIR 'bash -s' < deploy.sh
