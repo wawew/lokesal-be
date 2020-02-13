@@ -5,8 +5,8 @@ os:
 - linux
 env:
   global:
-  - DOCKER_IMAGE_NAME=${DOCKER_IMAGE_NAME}
-  - DOCKERHUB_ORG=${DOCKERHUB_ORG}
+  - DOCKER_IMAGE_NAME="${DOCKER_IMAGE_NAME}"
+  - DOCKERHUB_ORG="${DOCKERHUB_ORG}"
 branches:
   only:
   - release
