@@ -30,8 +30,6 @@ after_script:
 - sed -i -e 's|INI_DB_ENDPOINT|'"${INI_DB_ENDPOINT}"'|g' ./Dockerfile
 - sed -i -e 's|INI_DB_TEST|'"${INI_DB_TEST}"'|g' ./Dockerfile
 - sed -i -e 's|INI_DB_DEV|'"${INI_DB_DEV}"'|g' ./Dockerfile
-- sed -i -e 's|DOCKERHUB_USER|'"${DOCKERHUB_USER}"'|g' ~/.docker-profile
-- sed -i -e 's|DOCKERHUB_PASS|'"${DOCKERHUB_PASS}"'|g' ~/.docker-profile
 - docker build -t ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} .
 - docker push ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID}
 - docker tag ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} ${DOCKER_USERNAME}/${DOCKER_IMAGE_NAME}:be-latest
