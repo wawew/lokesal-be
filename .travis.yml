@@ -21,15 +21,15 @@ script:
 - sudo chmod +x deploy.sh
 - sudo chmod 600 deploy_rsa
 after_script:
-- sed -i -e 's|INI_KUNCI_LOKESAL|'"${INI_KUNCI_LOKESAL}"'|g' ./Dockerfile
-- sed -i -e 's|INI_EMAIL_LOKESAL|'"${INI_EMAIL_LOKESAL}"'|g' ./Dockerfile
-- sed -i -e 's|INI_PWD_LOKESAL|'"${INI_PWD_LOKESAL}"'|g' ./Dockerfile
-- sed -i -e 's|FLASK_ENV|'"${FLASK_ENV}"'|g' ./Dockerfile
-- sed -i -e 's|INI_UNAME|'"${INI_UNAME}"'|g' ./Dockerfile
-- sed -i -e 's|INI_PWD|'"${INI_PWD}"'|g' ./Dockerfile
-- sed -i -e 's|INI_DB_ENDPOINT|'"${INI_DB_ENDPOINT}"'|g' ./Dockerfile
-- sed -i -e 's|INI_DB_TEST|'"${INI_DB_TEST}"'|g' ./Dockerfile
-- sed -i -e 's|INI_DB_DEV|'"${INI_DB_DEV}"'|g' ./Dockerfile
+- sed -i -e 's|INI_KUNCI_LOKESAL_VALUE|'"${INI_KUNCI_LOKESAL}"'|g' ./Dockerfile
+- sed -i -e 's|INI_EMAIL_LOKESAL_VALUE|'"${INI_EMAIL_LOKESAL}"'|g' ./Dockerfile
+- sed -i -e 's|INI_PWD_LOKESAL_VALUE|'"${INI_PWD_LOKESAL}"'|g' ./Dockerfile
+- sed -i -e 's|FLASK_ENV_VALUE|'"${FLASK_ENV}"'|g' ./Dockerfile
+- sed -i -e 's|INI_UNAME_VALUE|'"${INI_UNAME}"'|g' ./Dockerfile
+- sed -i -e 's|INI_PWD_VALUE|'"${INI_PWD}"'|g' ./Dockerfile
+- sed -i -e 's|INI_DB_ENDPOINT_VALUE|'"${INI_DB_ENDPOINT}"'|g' ./Dockerfile
+- sed -i -e 's|INI_DB_TEST_VALUE|'"${INI_DB_TEST}"'|g' ./Dockerfile
+- sed -i -e 's|INI_DB_DEV_VALUE|'"${INI_DB_DEV}"'|g' ./Dockerfile
 - docker build -t ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} .
 - docker push ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID}
 - docker tag ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} ${DOCKERHUB_USER}/${DOCKER_IMAGE_NAME}:be-latest
