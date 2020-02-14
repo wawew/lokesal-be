@@ -1,5 +1,5 @@
 FROM python:3.6.9
-MAINTAINER Your Name "firdaus@alterra.id"
+MAINTAINER Wildan Firdaus "firdaus@alterra.id"
 RUN mkdir -p /var/api/lokesal-backend
 COPY . /var/api/lokesal-backend
 RUN pip install -r /var/api/lokesal-backend/requirements.txt
