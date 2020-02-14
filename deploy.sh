@@ -2,6 +2,7 @@
 
 eval "$(ssh-agent -s)" &&
 ssh-add -k ~/.ssh/id_rsa &&
+mkdir /var/api/lokesal-backend -p &&
 cd /var/api/lokesal-backend
 git checkout release
 git pull
