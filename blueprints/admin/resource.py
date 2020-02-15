@@ -210,7 +210,7 @@ class AdminPengguna(Resource):
         }, 404, {"Content-Type": "application/json"}
 
     def options(self, id=None):
-        pass
+        return 200
 
 
 class AdminKomentarKeluhan(Resource):
@@ -261,9 +261,9 @@ class AdminKomentarKeluhan(Resource):
             # mengurutkan berdasarkan diperbarui
             elif args["urutkan"] == "diperbarui":
                 if args["sortir"] == "" or args["sortir"] == "turun":
-                    filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.desc())
+                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.desc())
                 elif args["sortir"] == "naik":
-                    filter_pengguna = filter_pengguna.order_by(Pengguna.diperbarui.asc())
+                    filter_komentar = filter_komentar.order_by(KomentarKeluhan.diperbarui.asc())
         # limit komentar sesuai jumlah per halaman
         total_komentar = len(filter_komentar.all())
         offset = (args["halaman"] - 1)*args["per_halaman"]
@@ -311,7 +311,7 @@ class AdminKomentarKeluhan(Resource):
         }, 404, {"Content-Type": "application/json"}
 
     def options(self, id=None):
-        pass
+        return 200
 
 
 api.add_resource(AdminMasuk, "/masuk")
