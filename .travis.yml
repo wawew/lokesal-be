@@ -1,0 +1,38 @@
+sudo: required
+services:
+- docker
+os:
+- linux
+env:
+  global:
+  - DOCKER_IMAGE_NAME="${DOCKER_IMAGE_NAME}"
+  - DOCKERHUB_ORG="${DOCKERHUB_ORG}"
+branches:
+  only:
+  - release
+before_install:
+- openssl aes-256-cbc -K $encrypted_82d0f4abfe4d_key -iv $encrypted_82d0f4abfe4d_iv
+  -in deploy_rsa.enc -out deploy_rsa -d
+- eval "$(ssh-agent -s)"
+- chmod 600 deploy_rsa
+- ssh-add deploy_rsa
+- docker login -u "${DOCKERHUB_USER}" -p "${DOCKERHUB_PASS}"
+script:
+- sudo chmod +x deploy.sh
+- sudo chmod 600 deploy_rsa
+after_script:
+- sed -i -e 's|INI_KUNCI_LOKESAL_VALUE|'"${INI_KUNCI_LOKESAL}"'|g' ./Dockerfile
+- sed -i -e 's|INI_EMAIL_LOKESAL_VALUE|'"${INI_EMAIL_LOKESAL}"'|g' ./Dockerfile
+- sed -i -e 's|INI_PWD_LOKESAL_VALUE|'"${INI_PWD_LOKESAL}"'|g' ./Dockerfile
+- sed -i -e 's|FLASK_ENV_VALUE|'"${FLASK_ENV}"'|g' ./Dockerfile
+- sed -i -e 's|INI_UNAME_VALUE|'"${INI_UNAME}"'|g' ./Dockerfile
+- sed -i -e 's|INI_PWD_VALUE|'"${INI_PWD}"'|g' ./Dockerfile
+- sed -i -e 's|INI_DB_ENDPOINT_VALUE|'"${INI_DB_ENDPOINT}"'|g' ./Dockerfile
+- sed -i -e 's|INI_DB_TEST_VALUE|'"${INI_DB_TEST}"'|g' ./Dockerfile
+- sed -i -e 's|INI_DB_DEV_VALUE|'"${INI_DB_DEV}"'|g' ./Dockerfile
+- docker build -t ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} .
+- docker push ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID}
+- docker tag ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-${TRAVIS_BUILD_ID} ${DOCKERHUB_USER}/${DOCKER_IMAGE_NAME}:be-latest
+- docker push ${DOCKERHUB_ORG}/${DOCKER_IMAGE_NAME}:be-latest
+- ssh-keyscan -H $SSH_IP >> ~/.ssh/known_hosts
+- ssh -v -i deploy_rsa $SSH_USER@$SSH_IP DIR=$ROOT_DIR 'bash -s' < deploy.sh
