@@ -9,6 +9,7 @@ git pull
 source ~/.docker-profile
 echo $DOCKERHUB_PASS | docker login --username $DOCKERHUB_USER --password-stdin
 docker stop lokesal-backend
-docker rm lokesal-backend
+docker container prune -f
 docker rmi wiflash/lokesal:be-latest
+docker image prune -f
 docker run -d --name lokesal-backend -p 5000:5000 wiflash/lokesal:be-latest
