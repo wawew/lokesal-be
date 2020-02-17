@@ -138,7 +138,6 @@ class UmumKeluhan(Resource):
                 Keluhan
             ).join(Pengguna, Pengguna.id==Keluhan.id_pengguna)\
             .outerjoin(DukungKeluhan, DukungKeluhan.id_keluhan==Keluhan.id).group_by(Keluhan.id)
-            print(dir(filter_keluhan))
             # filter berdasarkan kota
             filter_keluhan = filter_keluhan.filter(Keluhan.kota==args["kota"])
             # filter id berdasarkan id_keluhan
